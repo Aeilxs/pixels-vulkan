@@ -59,6 +59,7 @@ add_executable(
     src/main.cpp
 
     src/app/app.cpp
+    src/app/cli.cpp
 
     src/platform/sdl_context.cpp
     src/platform/window.cpp

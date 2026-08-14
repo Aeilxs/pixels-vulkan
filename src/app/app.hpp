@@ -10,14 +10,18 @@
 #include "renderer/vulkan/surface.hpp"
 #include "renderer/vulkan/swapchain.hpp"
 
+#include "app/cli.hpp"
+
 namespace ps::app {
 class App {
    public:
-    App();
+    App(const cli::AppOptions& options);
 
     void run();
 
    private:
+    cli::AppOptions applicationOptions_;
+
     ps::platform::SdlContext sdlContext_;
     ps::platform::Window window_;
 
