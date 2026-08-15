@@ -1,5 +1,6 @@
 #pragma once
 
+#include "renderer/vulkan/buffer.hpp"
 #include "renderer/vulkan/command_buffer.hpp"
 #include "renderer/vulkan/command_pool.hpp"
 #include "renderer/vulkan/frame_synchronization.hpp"
@@ -59,22 +60,12 @@ class Renderer final {
     void drawFrame(const glm::mat4& viewProjection);
 
    private:
-    void createVertexBuffer();
-    void destroyVertexBuffer();
-    void createIndexBuffer();
-    void destroyIndexBuffer();
-
-    VkBuffer vertexBuffer_ = VK_NULL_HANDLE;
-    VkBuffer indexBuffer_ = VK_NULL_HANDLE;
-    VkDeviceMemory indexBufferMemory_ = VK_NULL_HANDLE;
-    VkDeviceMemory vertexBufferMemory_ = VK_NULL_HANDLE;
     /// @brief Records the graphics commands for the acquired swapchain image.
     /// @param imageIndex Index of the swapchain image acquired for this frame.
     /// @param viewProjection Camera matrix transforming world positions to clip coordinates.
     /// @throws std::runtime_error If command-buffer recording cannot begin or end.
     void recordCommandBuffer(std::uint32_t imageIndex, const glm::mat4& viewProjection);
 
-    VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
     VkDevice device_{VK_NULL_HANDLE};
     VkQueue graphicsQueue_{VK_NULL_HANDLE};
     VkQueue presentQueue_{VK_NULL_HANDLE};
@@ -85,6 +76,12 @@ class Renderer final {
     CommandPool commandPool_;
     CommandBuffer commandBuffer_;
     FrameSynchronization synchronization_;
+
+    Buffer vertexBuffer_;
+    Buffer indexBuffer_;
+
+    Buffer createVertexBuffer(const PhysicalDevice& physicalDevice, const Device& device);
+    Buffer createIndexBuffer(const PhysicalDevice& physicalDevice, const Device& device);
 };
 
 }  // namespace ps::renderer::vulkan

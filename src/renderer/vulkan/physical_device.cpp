@@ -188,13 +188,10 @@ namespace ps::renderer::vulkan {
 
 PhysicalDevice::PhysicalDevice(const Instance& instance, const Surface& surface) {
     std::uint32_t deviceCount = 0;
-
     const VkResult countResult = vkEnumeratePhysicalDevices(instance.nativeHandle(), &deviceCount, nullptr);
-
     if (countResult != VK_SUCCESS) {
         throw std::runtime_error{std::string{"Failed to count Vulkan physical devices: VkResult "} + std::to_string(countResult)};
     }
-
     if (deviceCount == 0) {
         throw std::runtime_error{"Failed to find any Vulkan physical device"};
     }
@@ -202,14 +199,12 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, const Surface& surface)
     std::vector<VkPhysicalDevice> devices(deviceCount);
 
     const VkResult enumerationResult = vkEnumeratePhysicalDevices(instance.nativeHandle(), &deviceCount, devices.data());
-
     if (enumerationResult != VK_SUCCESS) {
         throw std::runtime_error{std::string{"Failed to enumerate Vulkan physical devices: VkResult "} + std::to_string(enumerationResult)};
     }
 
     for (VkPhysicalDevice device : devices) {
         const DeviceEvaluation evaluation = evaluateDevice(device, surface.nativeHandle());
-
         if (!evaluation.suitable()) {
             continue;
         }
@@ -222,6 +217,18 @@ PhysicalDevice::PhysicalDevice(const Instance& instance, const Surface& surface)
     if (handle_ == VK_NULL_HANDLE) {
         throw std::runtime_error{"Failed to find a suitable Vulkan physical device"};
     }
+
+    vkGetPhysicalDeviceMemoryProperties(handle_, &memoryProperties_);
+}
+
+std::uint32_t PhysicalDevice::findMemoryType(std::uint32_t filter, VkMemoryPropertyFlags properties) const {
+    for (std::uint32_t i = 0; i < memoryProperties_.memoryTypeCount; ++i) {
+        if ((filter & (1U << i)) && (memoryProperties_.memoryTypes[i].propertyFlags & properties) == properties) {
+            return i;
+        }
+    }
+
+    throw std::runtime_error{"Failed to find suitable Vulkan memory type"};
 }
 
 const QueueFamilyIndices& PhysicalDevice::queueFamilies() const {

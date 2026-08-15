@@ -14,8 +14,8 @@ class Surface;
 /// The selected physical device must support the configured Vulkan API version,
 /// graphics and presentation queues, all required device extensions, a usable
 /// swapchain and the Vulkan features required by the renderer. Vulkan owns the
-/// physical-device handle; this class only retains the selected handle and queue
-/// family indices.
+/// physical-device handle; this class retains the selected handle, queue-family
+/// indices and the device's fixed memory properties.
 class PhysicalDevice final {
    public:
     /// @brief Selects the first physical device satisfying all renderer requirements.
@@ -36,9 +36,18 @@ class PhysicalDevice final {
     [[nodiscard("The queue family indices must be used")]]
     const QueueFamilyIndices& queueFamilies() const;
 
+    /// @brief Finds a compatible Vulkan memory type with all requested properties.
+    /// @param filter Memory-type bit mask reported by Vulkan for a resource.
+    /// @param properties Required memory property flags.
+    /// @return Index of a compatible memory type.
+    /// @throws std::runtime_error If no compatible memory type exists.
+    [[nodiscard("The selected Vulkan memory type index must be used")]]
+    std::uint32_t findMemoryType(std::uint32_t filter, VkMemoryPropertyFlags properties) const;
+
    private:
     VkPhysicalDevice handle_{VK_NULL_HANDLE};
     QueueFamilyIndices queueFamilies_;
+    VkPhysicalDeviceMemoryProperties memoryProperties_{};
 };
 
 }  // namespace ps::renderer::vulkan

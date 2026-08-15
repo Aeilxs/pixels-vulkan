@@ -69,6 +69,7 @@ add_executable(
     src/platform/sdl_context.cpp
     src/platform/window.cpp
 
+    src/renderer/vulkan/buffer.cpp
     src/renderer/vulkan/command_buffer.cpp
     src/renderer/vulkan/command_pool.cpp
     src/renderer/vulkan/device.cpp

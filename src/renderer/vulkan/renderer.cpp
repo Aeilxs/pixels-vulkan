@@ -1,29 +1,27 @@
 #include "renderer/vertex.hpp"
+#include "renderer/vulkan/buffer.hpp"
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/physical_device.hpp"
 #include "renderer/vulkan/renderer.hpp"
 #include "renderer/vulkan/swapchain.hpp"
 
 #include <cstdint>
-#include <cstring>
-#include <glm/vec2.hpp>
 #include <limits>
 #include <stdexcept>
 #include <string>
 
 namespace ps::renderer::vulkan {
 Renderer::Renderer(const PhysicalDevice& physicalDevice, const Device& device, const Swapchain& swapchain)
-    : physicalDevice_{physicalDevice.nativeHandle()},
-      device_{device.nativeHandle()},
+    : device_{device.nativeHandle()},
       graphicsQueue_{device.graphicsQueue()},
       presentQueue_{device.presentQueue()},
       swapchain_{swapchain},
       graphicsPipeline_{device, swapchain},
       commandPool_{physicalDevice, device},
       commandBuffer_{device, commandPool_},
-      synchronization_{device, swapchain.images().size()} {
-    createVertexBuffer();
-    createIndexBuffer();
+      synchronization_{device, swapchain.images().size()},
+      vertexBuffer_{createVertexBuffer(physicalDevice, device)},
+      indexBuffer_{createIndexBuffer(physicalDevice, device)} {
 }
 
 Renderer::~Renderer() {
@@ -33,8 +31,42 @@ Renderer::~Renderer() {
         // objects that are about to be destroyed.
         vkDeviceWaitIdle(device_);
     }
-    destroyVertexBuffer();
-    destroyIndexBuffer();
+}
+
+Buffer Renderer::createVertexBuffer(PhysicalDevice const& physicalDevice, Device const& device) {
+    const Vertex vertices[] = {
+        {{-200.0F, -200.0F}, {1.0F, 0.0F, 0.0F}},
+        {{200.0F, -200.0F}, {0.0F, 1.0F, 0.0F}},
+        {{200.0F, 200.0F}, {0.0F, 0.0F, 1.0F}},
+        {{-200.0F, 200.0F}, {1.0F, 1.0F, 1.0F}},
+    };
+
+    Buffer buf{
+        physicalDevice,
+        device,
+        sizeof(vertices),
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+
+    buf.write(vertices, sizeof(vertices));
+    return buf;
+}
+
+Buffer Renderer::createIndexBuffer(PhysicalDevice const& physicalDevice, Device const& device) {
+    const std::uint16_t indices[] = {0, 1, 2, 2, 3, 0};
+
+    Buffer buf{
+        physicalDevice,
+        device,
+        sizeof(indices),
+        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+
+    buf.write(indices, sizeof(indices));
+
+    return buf;
 }
 
 void Renderer::drawFrame(glm::mat4 const& viewProjection) {
@@ -122,155 +154,6 @@ void Renderer::drawFrame(glm::mat4 const& viewProjection) {
     }
 }
 
-void Renderer::createVertexBuffer() {
-    Vertex vertices[4] = {
-        {{-200.0F, -150.0F}, {1.0F, 0.0F, 0.0F}},
-        {{200.0F, -150.0F}, {0.0F, 1.0F, 0.0F}},
-        {{200.0F, 150.0F}, {0.0F, 0.0F, 1.0F}},
-        {{-200.0F, 150.0F}, {1.0F, 1.0F, 0.0F}},
-    };
-
-    VkBufferCreateInfo vertexBufferCreateInfo{};
-    vertexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    vertexBufferCreateInfo.size = sizeof(vertices);
-    vertexBufferCreateInfo.usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT;
-    vertexBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    VkResult result = vkCreateBuffer(device_, &vertexBufferCreateInfo, nullptr, &vertexBuffer_);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to create Vulkan vertex buffer: VkResult "} + std::to_string(result)};
-    }
-
-    VkMemoryRequirements memoryRequirements{};
-    VkPhysicalDeviceMemoryProperties memoryProperties{};
-    vkGetBufferMemoryRequirements(device_, vertexBuffer_, &memoryRequirements);
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties);
-
-    std::uint32_t memoryTypeIndex = 0;
-    bool foundMemoryType = false;
-    for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i) {
-        bool compatibleWithBuffer = (memoryRequirements.memoryTypeBits & (1U << i)) != 0;
-        bool isHostVisible = (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0;
-        bool isHostCoherent = (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0;
-        if (compatibleWithBuffer && isHostVisible && isHostCoherent) {
-            foundMemoryType = true;
-            memoryTypeIndex = i;
-            break;
-        }
-    }
-
-    if (!foundMemoryType) {
-        throw std::runtime_error{"Failed to find suitable Vulkan memory type for vertex buffer"};
-    }
-
-    VkMemoryAllocateInfo memoryAllocateInfo{};
-    memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    memoryAllocateInfo.allocationSize = memoryRequirements.size;
-    memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-    result = vkAllocateMemory(device_, &memoryAllocateInfo, nullptr, &vertexBufferMemory_);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to allocate Vulkan memory for vertex buffer: VkResult "} + std::to_string(result)};
-    }
-
-    result = vkBindBufferMemory(device_, vertexBuffer_, vertexBufferMemory_, 0);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to bind Vulkan memory to vertex buffer: VkResult "} + std::to_string(result)};
-    }
-
-    void* mappedMemory = nullptr;
-    result = vkMapMemory(device_, vertexBufferMemory_, 0, sizeof(vertices), 0, &mappedMemory);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to map Vulkan memory for vertex buffer: VkResult "} + std::to_string(result)};
-    }
-
-    std::memcpy(mappedMemory, vertices, sizeof(vertices));
-    vkUnmapMemory(device_, vertexBufferMemory_);
-}
-
-void Renderer::destroyVertexBuffer() {
-    if (vertexBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device_, vertexBuffer_, nullptr);
-        vertexBuffer_ = VK_NULL_HANDLE;
-    }
-
-    if (vertexBufferMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device_, vertexBufferMemory_, nullptr);
-        vertexBufferMemory_ = VK_NULL_HANDLE;
-    }
-}
-
-void Renderer::createIndexBuffer() {
-    const std::uint16_t indices[6] = {0, 1, 3, /**/ 1, 2, 3};
-    VkBufferCreateInfo vertexIndexBufferCreateInfo{};
-    vertexIndexBufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
-    vertexIndexBufferCreateInfo.size = sizeof(indices);
-    vertexIndexBufferCreateInfo.usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT;
-    vertexIndexBufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
-
-    VkResult result = vkCreateBuffer(device_, &vertexIndexBufferCreateInfo, nullptr, &indexBuffer_);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to create Vulkan vertex index buffer: VkResult "} + std::to_string(result)};
-    }
-    VkMemoryRequirements memoryRequirements{};
-    VkPhysicalDeviceMemoryProperties memoryProperties{};
-    vkGetBufferMemoryRequirements(device_, indexBuffer_, &memoryRequirements);
-    vkGetPhysicalDeviceMemoryProperties(physicalDevice_, &memoryProperties);
-
-    std::uint32_t memoryTypeIndex = 0;
-    bool foundMemoryType = false;
-    for (std::uint32_t i = 0; i < memoryProperties.memoryTypeCount; ++i) {
-        bool compatibleWithBuffer = (memoryRequirements.memoryTypeBits & (1U << i)) != 0;
-        bool isHostVisible = (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) != 0;
-        bool isHostCoherent = (memoryProperties.memoryTypes[i].propertyFlags & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) != 0;
-        if (compatibleWithBuffer && isHostVisible && isHostCoherent) {
-            foundMemoryType = true;
-            memoryTypeIndex = i;
-            break;
-        }
-    }
-
-    if (!foundMemoryType) {
-        throw std::runtime_error{"Failed to find suitable Vulkan memory type for vertex index buffer"};
-    }
-
-    VkMemoryAllocateInfo memoryAllocateInfo{};
-    memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
-    memoryAllocateInfo.allocationSize = memoryRequirements.size;
-    memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
-
-    result = vkAllocateMemory(device_, &memoryAllocateInfo, nullptr, &indexBufferMemory_);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to allocate Vulkan memory for vertex index buffer: VkResult "} + std::to_string(result)};
-    }
-
-    result = vkBindBufferMemory(device_, indexBuffer_, indexBufferMemory_, 0);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to bind Vulkan memory to vertex index buffer: VkResult "} + std::to_string(result)};
-    }
-
-    void* mappedMemory = nullptr;
-    result = vkMapMemory(device_, indexBufferMemory_, 0, sizeof(indices), 0, &mappedMemory);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to map Vulkan memory for vertex index buffer: VkResult "} + std::to_string(result)};
-    }
-
-    std::memcpy(mappedMemory, indices, sizeof(indices));
-    vkUnmapMemory(device_, indexBufferMemory_);
-}
-
-void Renderer::destroyIndexBuffer() {
-    if (indexBuffer_ != VK_NULL_HANDLE) {
-        vkDestroyBuffer(device_, indexBuffer_, nullptr);
-        indexBuffer_ = VK_NULL_HANDLE;
-    }
-
-    if (indexBufferMemory_ != VK_NULL_HANDLE) {
-        vkFreeMemory(device_, indexBufferMemory_, nullptr);
-        indexBufferMemory_ = VK_NULL_HANDLE;
-    }
-}
-
 void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& viewProjection) {
     const VkCommandBuffer commandBuffer = commandBuffer_.nativeHandle();
 
@@ -336,9 +219,12 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &colorAttachment;
 
+    VkBuffer vertexBufferHandle = vertexBuffer_.nativeHandle();
+    VkBuffer indexBufferHandle = indexBuffer_.nativeHandle();
+
     VkDeviceSize vertexBufferOffset = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &vertexBufferOffset);
-    vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT16);
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBufferHandle, &vertexBufferOffset);
+    vkCmdBindIndexBuffer(commandBuffer, indexBufferHandle, 0, VK_INDEX_TYPE_UINT16);
 
     /// Rendering start //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
