@@ -6,8 +6,7 @@
 namespace ps::app {
 
 App::App(const cli::AppOptions& options)
-    : applicationOptions_{options},
-      sdlContext_{},
+    : sdlContext_{},
       window_{config::applicationName, config::initialWindowWidth, config::initialWindowHeight},
       vulkanInstance_{},
       vulkanSurface_{vulkanInstance_, window_},

@@ -9,6 +9,7 @@ using ps::app::App;
 
 int run(int argc, char* argv[]) {
     const cli::AppOptions options = cli::parse(argc, argv);
+
     if (options.help) {
         cli::usage(argv[0], std::cout);
         return 0;
@@ -16,6 +17,7 @@ int run(int argc, char* argv[]) {
 
     App app{options};
     app.run();
+
     return 0;
 }
 

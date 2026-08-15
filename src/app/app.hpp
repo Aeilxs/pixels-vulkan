@@ -20,8 +20,6 @@ class App {
     void run();
 
    private:
-    cli::AppOptions applicationOptions_;
-
     ps::platform::SdlContext sdlContext_;
     ps::platform::Window window_;
 
