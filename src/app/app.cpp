@@ -14,7 +14,12 @@ App::App(const cli::AppOptions& options)
       physicalDevice_{vulkanInstance_, vulkanSurface_},
       device_{physicalDevice_},
       swapchain_{physicalDevice_, device_, vulkanSurface_, window_},
-      renderer_{physicalDevice_, device_, swapchain_} {
+      renderer_{physicalDevice_, device_, swapchain_, particleSystem_.particles()} {
+    const glm::vec2 contentSize = glm::vec2{
+        static_cast<float>(particleSystem_.imageDimensions().width),
+        static_cast<float>(particleSystem_.imageDimensions().height),
+    };
+    camera_.fit(contentSize * 0.5F, contentSize, 0.95F);
 }
 
 void App::run() {

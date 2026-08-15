@@ -42,7 +42,13 @@ ParticleSystem ParticleSystem::fromImage(const image::Image& image, std::uint32_
 
     ParticleSystem system{};
     system.particles_ = std::move(particles);
+    system.imageDimensions_.width = image.width;
+    system.imageDimensions_.height = image.height;
     return system;
+}
+
+ImageDimensions ParticleSystem::imageDimensions() const noexcept {
+    return imageDimensions_;
 }
 
 std::span<const Particle> ParticleSystem::particles() const noexcept {

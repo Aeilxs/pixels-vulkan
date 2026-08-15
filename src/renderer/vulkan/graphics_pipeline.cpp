@@ -1,4 +1,4 @@
-#include "renderer/vertex.hpp"
+#include "gfx/particles/particle.hpp"
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/graphics_pipeline.hpp"
 #include "renderer/vulkan/swapchain.hpp"
@@ -8,7 +8,6 @@
 #include <filesystem>
 #include <fstream>
 #include <glm/mat4x4.hpp>
-#include <glm/vec2.hpp>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -16,6 +15,8 @@
 #ifndef PIXEL_STORM_SHADER_DIR
 #error "PIXEL_STORM_SHADER_DIR must be defined by CMake"
 #endif
+
+using ps::gfx::particles::Particle;
 
 namespace ps::renderer::vulkan {
 namespace {
@@ -62,8 +63,8 @@ VkShaderModule createShaderModule(VkDevice device, const std::vector<std::uint32
 
 GraphicsPipeline::GraphicsPipeline(const Device& device, const Swapchain& swapchain) : device_{device.nativeHandle()} {
     const std::filesystem::path shaderDirectory{PIXEL_STORM_SHADER_DIR};
-    const std::vector<std::uint32_t> vertexCode = readSpirv(shaderDirectory / "triangle.vert.spv");
-    const std::vector<std::uint32_t> fragmentCode = readSpirv(shaderDirectory / "triangle.frag.spv");
+    const std::vector<std::uint32_t> vertexCode = readSpirv(shaderDirectory / "particle.vert.spv");
+    const std::vector<std::uint32_t> fragmentCode = readSpirv(shaderDirectory / "particle.frag.spv");
 
     VkShaderModule vertexShader = VK_NULL_HANDLE;
     VkShaderModule fragmentShader = VK_NULL_HANDLE;
@@ -89,32 +90,32 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, const Swapchain& swapch
             fragmentStage,
         };
 
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = 0;
+        bindingDescription.stride = sizeof(Particle);
+        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+
+        VkVertexInputAttributeDescription attributeDescriptions[2]{};
+        attributeDescriptions[0].binding = 0;
+        attributeDescriptions[0].location = 0;
+        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
+        attributeDescriptions[0].offset = offsetof(Particle, position);
+
+        attributeDescriptions[1].binding = 0;
+        attributeDescriptions[1].location = 1;
+        attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
+        attributeDescriptions[1].offset = offsetof(Particle, color);
+
         VkPipelineVertexInputStateCreateInfo vertexInput{};
         vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
         vertexInput.vertexBindingDescriptionCount = 1;
-
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(ps::renderer::Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
         vertexInput.pVertexBindingDescriptions = &bindingDescription;
-
-        VkVertexInputAttributeDescription attributeDescription[2]{};
-        attributeDescription[0].location = 0;
-        attributeDescription[0].binding = 0;
-        attributeDescription[0].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescription[0].offset = offsetof(ps::renderer::Vertex, pos);
-
-        attributeDescription[1].location = 1;
-        attributeDescription[1].binding = 0;
-        attributeDescription[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescription[1].offset = offsetof(ps::renderer::Vertex, color);
         vertexInput.vertexAttributeDescriptionCount = 2;
-        vertexInput.pVertexAttributeDescriptions = attributeDescription;
+        vertexInput.pVertexAttributeDescriptions = attributeDescriptions;
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo viewportState{};

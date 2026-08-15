@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gfx/particles/particle.hpp"
 #include "renderer/vulkan/buffer.hpp"
 #include "renderer/vulkan/command_buffer.hpp"
 #include "renderer/vulkan/command_pool.hpp"
@@ -8,6 +9,7 @@
 
 #include <cstdint>
 #include <glm/mat4x4.hpp>
+#include <span>
 #include <vulkan/vulkan.h>
 
 namespace ps::renderer::vulkan {
@@ -36,8 +38,12 @@ class Renderer final {
     /// @param device Logical device and graphics/presentation queues used for rendering.
     /// @param swapchain Swapchain whose images are rendered and presented.
     /// @throws std::runtime_error If an owned Vulkan resource cannot be created.
-    Renderer(const PhysicalDevice& physicalDevice, const Device& device, const Swapchain& swapchain);
-
+    Renderer(
+        const PhysicalDevice& physicalDevice,
+        const Device& device,
+        const Swapchain& swapchain,
+        std::span<const ps::gfx::particles::Particle> particles
+    );
     /// @brief Waits for outstanding device work before owned renderer resources are destroyed.
     ~Renderer();
 
@@ -66,6 +72,8 @@ class Renderer final {
     /// @throws std::runtime_error If command-buffer recording cannot begin or end.
     void recordCommandBuffer(std::uint32_t imageIndex, const glm::mat4& viewProjection);
 
+    Buffer createParticleBuffer(const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles);
+
     VkDevice device_{VK_NULL_HANDLE};
     VkQueue graphicsQueue_{VK_NULL_HANDLE};
     VkQueue presentQueue_{VK_NULL_HANDLE};
@@ -77,11 +85,8 @@ class Renderer final {
     CommandBuffer commandBuffer_;
     FrameSynchronization synchronization_;
 
-    Buffer vertexBuffer_;
-    Buffer indexBuffer_;
-
-    Buffer createVertexBuffer(const PhysicalDevice& physicalDevice, const Device& device);
-    Buffer createIndexBuffer(const PhysicalDevice& physicalDevice, const Device& device);
+    Buffer particleBuffer_;
+    std::uint32_t particleCount_{0};
 };
 
 }  // namespace ps::renderer::vulkan

@@ -35,19 +35,19 @@ function(pixel_storm_compile_shader shader_source shader_output)
     )
 endfunction()
 
-set(TRIANGLE_VERTEX_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.vert")
-set(TRIANGLE_FRAGMENT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/triangle.frag")
-set(TRIANGLE_VERTEX_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/triangle.vert.spv")
-set(TRIANGLE_FRAGMENT_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/triangle.frag.spv")
+set(PARTICLE_VERTEX_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/particle.vert")
+set(PARTICLE_FRAGMENT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/particle.frag")
+set(PARTICLE_VERTEX_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/particle.vert.spv")
+set(PARTICLE_FRAGMENT_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/particle.frag.spv")
 
-pixel_storm_compile_shader("${TRIANGLE_VERTEX_SHADER}" "${TRIANGLE_VERTEX_SPIRV}")
-pixel_storm_compile_shader("${TRIANGLE_FRAGMENT_SHADER}" "${TRIANGLE_FRAGMENT_SPIRV}")
+pixel_storm_compile_shader("${PARTICLE_VERTEX_SHADER}" "${PARTICLE_VERTEX_SPIRV}")
+pixel_storm_compile_shader("${PARTICLE_FRAGMENT_SHADER}" "${PARTICLE_FRAGMENT_SPIRV}")
 
 add_custom_target(
     Pixel_StormShaders
     DEPENDS
-        "${TRIANGLE_VERTEX_SPIRV}"
-        "${TRIANGLE_FRAGMENT_SPIRV}"
+        "${PARTICLE_VERTEX_SPIRV}"
+        "${PARTICLE_FRAGMENT_SPIRV}"
 )
 
 #

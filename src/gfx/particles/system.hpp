@@ -9,6 +9,11 @@
 
 namespace ps::gfx::particles {
 
+struct ImageDimensions {
+    std::uint32_t width{};
+    std::uint32_t height{};
+};
+
 /// @brief Owns the particles generated from an image and exposes them as a contiguous view.
 class ParticleSystem {
    public:
@@ -24,8 +29,13 @@ class ParticleSystem {
     [[nodiscard("ParticleSystem::particles() returns a span of particles. If you don't use it, you might be doing something wrong.")]]
     std::span<const Particle> particles() const noexcept;
 
+    /// @brief Returns the dimensions of the source image.
+    [[nodiscard]]
+    ImageDimensions imageDimensions() const noexcept;
+
    private:
     std::vector<Particle> particles_;
+    ImageDimensions imageDimensions_{};
 };
 
 }  // namespace ps::gfx::particles

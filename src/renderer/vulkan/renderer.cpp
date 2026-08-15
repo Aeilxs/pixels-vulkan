@@ -1,4 +1,3 @@
-#include "renderer/vertex.hpp"
 #include "renderer/vulkan/buffer.hpp"
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/physical_device.hpp"
@@ -11,7 +10,12 @@
 #include <string>
 
 namespace ps::renderer::vulkan {
-Renderer::Renderer(const PhysicalDevice& physicalDevice, const Device& device, const Swapchain& swapchain)
+Renderer::Renderer(
+    const PhysicalDevice& physicalDevice,
+    const Device& device,
+    const Swapchain& swapchain,
+    const std::span<const ps::gfx::particles::Particle> particles
+)
     : device_{device.nativeHandle()},
       graphicsQueue_{device.graphicsQueue()},
       presentQueue_{device.presentQueue()},
@@ -20,8 +24,8 @@ Renderer::Renderer(const PhysicalDevice& physicalDevice, const Device& device, c
       commandPool_{physicalDevice, device},
       commandBuffer_{device, commandPool_},
       synchronization_{device, swapchain.images().size()},
-      vertexBuffer_{createVertexBuffer(physicalDevice, device)},
-      indexBuffer_{createIndexBuffer(physicalDevice, device)} {
+      particleBuffer_{createParticleBuffer(physicalDevice, device, particles)},
+      particleCount_{static_cast<std::uint32_t>(particles.size())} {
 }
 
 Renderer::~Renderer() {
@@ -33,40 +37,22 @@ Renderer::~Renderer() {
     }
 }
 
-Buffer Renderer::createVertexBuffer(PhysicalDevice const& physicalDevice, Device const& device) {
-    const Vertex vertices[] = {
-        {{-200.0F, -200.0F}, {1.0F, 0.0F, 0.0F}},
-        {{200.0F, -200.0F}, {0.0F, 1.0F, 0.0F}},
-        {{200.0F, 200.0F}, {0.0F, 0.0F, 1.0F}},
-        {{-200.0F, 200.0F}, {1.0F, 1.0F, 1.0F}},
-    };
+Buffer Renderer::createParticleBuffer(
+    const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles
+) {
+    const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
 
-    Buffer buf{
+    Buffer buffer{
         physicalDevice,
         device,
-        sizeof(vertices),
+        bufferSize,
         VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     };
 
-    buf.write(vertices, sizeof(vertices));
-    return buf;
-}
+    buffer.write(particles.data(), bufferSize);
 
-Buffer Renderer::createIndexBuffer(PhysicalDevice const& physicalDevice, Device const& device) {
-    const std::uint16_t indices[] = {0, 1, 2, 2, 3, 0};
-
-    Buffer buf{
-        physicalDevice,
-        device,
-        sizeof(indices),
-        VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    };
-
-    buf.write(indices, sizeof(indices));
-
-    return buf;
+    return buffer;
 }
 
 void Renderer::drawFrame(glm::mat4 const& viewProjection) {
@@ -219,12 +205,10 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &colorAttachment;
 
-    VkBuffer vertexBufferHandle = vertexBuffer_.nativeHandle();
-    VkBuffer indexBufferHandle = indexBuffer_.nativeHandle();
+    const VkBuffer particleBufferHandle = particleBuffer_.nativeHandle();
 
-    VkDeviceSize vertexBufferOffset = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBufferHandle, &vertexBufferOffset);
-    vkCmdBindIndexBuffer(commandBuffer, indexBufferHandle, 0, VK_INDEX_TYPE_UINT16);
+    const VkDeviceSize particleBufferOffset = 0;
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &particleBufferHandle, &particleBufferOffset);
 
     /// Rendering start //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
@@ -246,7 +230,9 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_.nativeHandle());
     vkCmdPushConstants(commandBuffer, graphicsPipeline_.layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjection);
 
-    vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
+    // Fucking draw
+    vkCmdDraw(commandBuffer, particleCount_, 1, 0, 0);
+
     vkCmdEndRendering(commandBuffer);
     /// Rendering end ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
