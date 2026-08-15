@@ -6,7 +6,8 @@
 namespace ps::app {
 
 App::App(const cli::AppOptions& options)
-    : sdlContext_{},
+    : particleSystem_{gfx::particles::ParticleSystem::fromImage(ps::image::load(options.image_path), options.gap)},
+      sdlContext_{},
       window_{config::applicationName, config::initialWindowWidth, config::initialWindowHeight},
       vulkanInstance_{},
       vulkanSurface_{vulkanInstance_, window_},

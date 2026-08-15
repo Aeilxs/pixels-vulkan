@@ -3,8 +3,7 @@
 #include "gfx/particles/particle.hpp"
 #include "image/image.hpp"
 
-#include <glm/vec2.hpp>
-#include <glm/vec4.hpp>
+#include <cstdint>
 #include <vector>
 
 namespace ps::gfx::particles {

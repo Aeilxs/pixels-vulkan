@@ -17,11 +17,6 @@ int run(int argc, char* argv[]) {
     }
 
     App app{options};
-    Image image = ps::image::load(options.image_path);
-
-    std::cout << "Loaded image: " << image.width << "x" << image.height << " pixels\n";
-    std::cout << "Pixel count: " << image.pixels.size() << "\n";
-
     app.run();
 
     return 0;

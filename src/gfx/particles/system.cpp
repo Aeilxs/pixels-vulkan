@@ -1,6 +1,10 @@
 #include "gfx/particles/particle.hpp"
 #include "gfx/particles/system.hpp"
 
+#include <iostream>
+#include <stdexcept>
+#include <utility>
+
 namespace image = ps::image;
 
 namespace ps::gfx::particles {

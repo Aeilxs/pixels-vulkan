@@ -19,6 +19,8 @@ class App {
     void run();
 
    private:
+    ps::gfx::particles::ParticleSystem particleSystem_;
+
     ps::platform::SdlContext sdlContext_;
     ps::platform::Window window_;
 
@@ -28,8 +30,6 @@ class App {
     ps::renderer::vulkan::Device device_;
     ps::renderer::vulkan::Swapchain swapchain_;
     ps::renderer::vulkan::Renderer renderer_;
-
-    ps::gfx::particles::ParticleSystem particleSystem_;
 
     bool running_{true};
 
