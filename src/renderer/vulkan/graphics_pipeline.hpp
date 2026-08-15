@@ -9,9 +9,10 @@ class Swapchain;
 
 /// @brief Owns the graphics pipeline used by the current renderer.
 ///
-/// The pipeline uses Vulkan 1.3 dynamic rendering, consumes the current vertex format,
-/// uses no descriptor sets, and leaves viewport and scissor state dynamic so they can
-/// follow the swapchain extent.
+/// The pipeline uses Vulkan 1.3 dynamic rendering and renders Particle records as
+/// point-list primitives. Position and color are read from the particle vertex buffer;
+/// viewport and scissor state remain dynamic so they can follow the swapchain extent.
+/// No descriptor sets are used yet.
 ///
 /// @note The logical Vulkan device used to create this pipeline must outlive it.
 class GraphicsPipeline final {

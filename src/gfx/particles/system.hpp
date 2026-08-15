@@ -9,6 +9,7 @@
 
 namespace ps::gfx::particles {
 
+/// @brief Dimensions of the source image used to generate particles.
 struct ImageDimensions {
     std::uint32_t width{};
     std::uint32_t height{};
@@ -30,6 +31,7 @@ class ParticleSystem {
     std::span<const Particle> particles() const noexcept;
 
     /// @brief Returns the dimensions of the source image.
+    /// @return Source-image width and height in pixels.
     [[nodiscard]]
     ImageDimensions imageDimensions() const noexcept;
 

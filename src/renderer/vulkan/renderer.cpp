@@ -1,7 +1,7 @@
-#include "renderer/vulkan/buffer.hpp"
+#include "renderer/vulkan/renderer.hpp"
+
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/physical_device.hpp"
-#include "renderer/vulkan/renderer.hpp"
 #include "renderer/vulkan/swapchain.hpp"
 
 #include <cstdint>
@@ -10,11 +10,33 @@
 #include <string>
 
 namespace ps::renderer::vulkan {
+namespace {
+
+Buffer createParticleBuffer(
+    const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles
+) {
+    const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
+
+    Buffer buffer{
+        physicalDevice,
+        device,
+        bufferSize,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+
+    buffer.write(particles.data(), bufferSize);
+
+    return buffer;
+}
+
+}  // namespace
+
 Renderer::Renderer(
     const PhysicalDevice& physicalDevice,
     const Device& device,
     const Swapchain& swapchain,
-    const std::span<const ps::gfx::particles::Particle> particles
+    std::span<const ps::gfx::particles::Particle> particles
 )
     : device_{device.nativeHandle()},
       graphicsQueue_{device.graphicsQueue()},
@@ -35,24 +57,6 @@ Renderer::~Renderer() {
         // objects that are about to be destroyed.
         vkDeviceWaitIdle(device_);
     }
-}
-
-Buffer Renderer::createParticleBuffer(
-    const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles
-) {
-    const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
-
-    Buffer buffer{
-        physicalDevice,
-        device,
-        bufferSize,
-        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
-    };
-
-    buffer.write(particles.data(), bufferSize);
-
-    return buffer;
 }
 
 void Renderer::drawFrame(glm::mat4 const& viewProjection) {
@@ -210,7 +214,6 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     const VkDeviceSize particleBufferOffset = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &particleBufferHandle, &particleBufferOffset);
 
-    /// Rendering start //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
     VkViewport viewport{};
@@ -230,11 +233,9 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_.nativeHandle());
     vkCmdPushConstants(commandBuffer, graphicsPipeline_.layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjection);
 
-    // Fucking draw
     vkCmdDraw(commandBuffer, particleCount_, 1, 0, 0);
 
     vkCmdEndRendering(commandBuffer);
-    /// Rendering end ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     VkImageMemoryBarrier2 toPresent{};
     toPresent.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER_2;

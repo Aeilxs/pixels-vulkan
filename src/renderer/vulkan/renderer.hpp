@@ -22,8 +22,9 @@ class Swapchain;
 ///
 /// The renderer owns the resources that belong to frame rendering itself: the
 /// graphics pipeline, graphics command pool, primary command buffer and frame
-/// synchronization primitives. It records rendering commands, submits them to
-/// the graphics queue and presents the acquired swapchain image.
+/// synchronization primitives. The current implementation also uploads and owns
+/// the particle vertex buffer supplied at construction. It records rendering commands,
+/// submits them to the graphics queue and presents the acquired swapchain image.
 ///
 /// Bootstrap resources such as the Vulkan instance, surface, physical device,
 /// logical device and swapchain remain separate objects. This keeps bootstrap
@@ -37,6 +38,7 @@ class Renderer final {
     /// @param physicalDevice Physical device providing the graphics queue family.
     /// @param device Logical device and graphics/presentation queues used for rendering.
     /// @param swapchain Swapchain whose images are rendered and presented.
+    /// @param particles Initial particle data uploaded to the vertex buffer.
     /// @throws std::runtime_error If an owned Vulkan resource cannot be created.
     Renderer(
         const PhysicalDevice& physicalDevice,
@@ -71,8 +73,6 @@ class Renderer final {
     /// @param viewProjection Camera matrix transforming world positions to clip coordinates.
     /// @throws std::runtime_error If command-buffer recording cannot begin or end.
     void recordCommandBuffer(std::uint32_t imageIndex, const glm::mat4& viewProjection);
-
-    Buffer createParticleBuffer(const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles);
 
     VkDevice device_{VK_NULL_HANDLE};
     VkQueue graphicsQueue_{VK_NULL_HANDLE};

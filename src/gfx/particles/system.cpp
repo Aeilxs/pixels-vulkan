@@ -1,6 +1,6 @@
-#include "gfx/particles/particle.hpp"
 #include "gfx/particles/system.hpp"
 
+#include <cstddef>
 #include <stdexcept>
 #include <utility>
 
@@ -9,7 +9,7 @@ namespace image = ps::image;
 namespace ps::gfx::particles {
 ParticleSystem ParticleSystem::fromImage(const image::Image& image, std::uint32_t gap) {
     if (gap == 0) {
-        throw std::invalid_argument("Gap must be greater than zero. You don't want to be stuck in an infinite loop, do you ?");
+        throw std::invalid_argument("Gap must be greater than zero.");
     }
 
     std::vector<Particle> particles{};

@@ -115,9 +115,6 @@ Buffer::Buffer(Buffer&& other) noexcept
     other.requiredMemoryProperties_ = 0;
 }
 
-VkDeviceSize Buffer::size() const noexcept {
-    return size_;
-}
 
 VkBuffer Buffer::nativeHandle() const noexcept {
     return buffer_;

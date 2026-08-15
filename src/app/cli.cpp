@@ -2,7 +2,6 @@
 
 #include <charconv>
 #include <filesystem>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -28,7 +27,6 @@ std::uint32_t parseGap(std::string_view value) {
     const std::from_chars_result result = std::from_chars(begin, end, gap);
 
     if (result.ec != std::errc{} || result.ptr != end || gap == 0) {
-        std::cout << "You don't want to be stuck in an infinite loop, do you ?\n";
         throw Error("Gap must be a positive integer: " + std::string(value));
     }
 

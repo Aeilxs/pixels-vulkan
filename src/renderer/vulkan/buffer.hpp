@@ -8,8 +8,8 @@ class Device;
 
 /// @brief Owns a Vulkan buffer and its bound device-memory allocation.
 ///
-/// Buffer centralizes the Vulkan resource lifetime and host-visible writes used
-/// by renderer resources. It does not know what the bytes represent; usage and
+/// Buffer centralizes Vulkan resource lifetime and host-visible writes for GPU
+/// buffers. It does not know what the bytes represent; usage and
 /// memory-property flags are supplied by the caller.
 ///
 /// @note The logical device supplied at construction must outlive this object.
@@ -35,6 +35,7 @@ class Buffer {
     ~Buffer();
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
+    /// @brief Transfers ownership of another buffer's Vulkan resources.
     Buffer(Buffer&& other) noexcept;
     Buffer& operator=(Buffer&& other) = delete;
 
@@ -50,10 +51,6 @@ class Buffer {
     /// @brief Returns the owned Vulkan buffer handle.
     [[nodiscard]]
     VkBuffer nativeHandle() const noexcept;
-
-    /// @brief Returns the requested buffer size in bytes.
-    [[nodiscard]]
-    VkDeviceSize size() const noexcept;
 
    private:
     const Device* device_{};
