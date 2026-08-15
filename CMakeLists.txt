@@ -61,6 +61,7 @@ add_executable(
     src/app/app.cpp
     src/app/cli.cpp
 
+    src/gfx/camera/camera_2d.cpp
     src/gfx/particles/system.cpp
 
     src/image/image.cpp

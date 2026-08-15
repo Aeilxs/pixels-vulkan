@@ -1,7 +1,6 @@
 #include "gfx/particles/particle.hpp"
 #include "gfx/particles/system.hpp"
 
-#include <iostream>
 #include <stdexcept>
 #include <utility>
 
@@ -45,4 +44,9 @@ ParticleSystem ParticleSystem::fromImage(const image::Image& image, std::uint32_
     system.particles_ = std::move(particles);
     return system;
 }
+
+std::span<const Particle> ParticleSystem::particles() const {
+    return particles_;
+}
+
 }  // namespace ps::gfx::particles
