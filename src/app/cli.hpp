@@ -13,6 +13,7 @@ class Error final : public std::runtime_error {
     using std::runtime_error::runtime_error;
 };
 
+/// @brief Validated startup options produced by the command-line parser.
 struct AppOptions {
     bool help{false};
     std::filesystem::path image_path{};

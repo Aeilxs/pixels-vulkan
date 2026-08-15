@@ -134,7 +134,7 @@ if recent_commits_output:
 
 key_files = [
     "CMakeLists.txt",
-    "src/config.hpp",
+    "src/app/config.hpp",
     "src/main.cpp",
     "src/platform/sdl_context.hpp",
     "src/platform/window.hpp",

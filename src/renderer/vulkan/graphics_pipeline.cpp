@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <glm/mat4x4.hpp>
 #include <glm/vec2.hpp>
 #include <stdexcept>
 #include <string>
@@ -160,7 +161,7 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, const Swapchain& swapch
         VkPushConstantRange pushConstantRange{};
         pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
         pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(glm::vec2);
+        pushConstantRange.size = sizeof(glm::mat4);
 
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;

@@ -45,7 +45,7 @@ ParticleSystem ParticleSystem::fromImage(const image::Image& image, std::uint32_
     return system;
 }
 
-std::span<const Particle> ParticleSystem::particles() const {
+std::span<const Particle> ParticleSystem::particles() const noexcept {
     return particles_;
 }
 

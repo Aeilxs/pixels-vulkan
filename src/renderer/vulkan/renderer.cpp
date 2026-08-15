@@ -4,8 +4,6 @@
 #include "renderer/vulkan/renderer.hpp"
 #include "renderer/vulkan/swapchain.hpp"
 
-#include <chrono>
-#include <cmath>
 #include <cstdint>
 #include <cstring>
 #include <glm/vec2.hpp>
@@ -23,8 +21,7 @@ Renderer::Renderer(const PhysicalDevice& physicalDevice, const Device& device, c
       graphicsPipeline_{device, swapchain},
       commandPool_{physicalDevice, device},
       commandBuffer_{device, commandPool_},
-      synchronization_{device, swapchain.images().size()},
-      startTime_{std::chrono::steady_clock::now()} {
+      synchronization_{device, swapchain.images().size()} {
     createVertexBuffer();
     createIndexBuffer();
 }
@@ -40,7 +37,7 @@ Renderer::~Renderer() {
     destroyIndexBuffer();
 }
 
-void Renderer::drawFrame() {
+void Renderer::drawFrame(glm::mat4 const& viewProjection) {
     const VkFence inFlightFence = synchronization_.inFlightFence();
 
     VkResult result = vkWaitForFences(device_, 1, &inFlightFence, VK_TRUE, std::numeric_limits<std::uint64_t>::max());
@@ -65,7 +62,7 @@ void Renderer::drawFrame() {
     if (result != VK_SUCCESS) {
         throw std::runtime_error{std::string{"Failed to reset Vulkan command buffer: VkResult "} + std::to_string(result)};
     }
-    recordCommandBuffer(imageIndex, std::chrono::steady_clock::now() - startTime_);
+    recordCommandBuffer(imageIndex, viewProjection);
 
     const VkSemaphore imageAvailable = synchronization_.imageAvailable();
     const VkSemaphore renderFinished = synchronization_.renderFinished(imageIndex);
@@ -127,10 +124,10 @@ void Renderer::drawFrame() {
 
 void Renderer::createVertexBuffer() {
     Vertex vertices[4] = {
-        {{-0.3F, -0.3F}, {1.0F, 0.0F, 0.0F}},  // rouge
-        {{0.3F, -0.3F}, {0.0F, 1.0F, 0.0F}},   // vert
-        {{0.3F, 0.3F}, {0.0F, 0.0F, 1.0F}},    // bleu
-        {{-0.3F, 0.3F}, {1.0F, 1.0F, 0.0F}},   // jaune
+        {{-200.0F, -150.0F}, {1.0F, 0.0F, 0.0F}},
+        {{200.0F, -150.0F}, {0.0F, 1.0F, 0.0F}},
+        {{200.0F, 150.0F}, {0.0F, 0.0F, 1.0F}},
+        {{-200.0F, 150.0F}, {1.0F, 1.0F, 0.0F}},
     };
 
     VkBufferCreateInfo vertexBufferCreateInfo{};
@@ -274,9 +271,8 @@ void Renderer::destroyIndexBuffer() {
     }
 }
 
-void Renderer::recordCommandBuffer(std::uint32_t imageIndex, const std::chrono::steady_clock::duration& duration) {
+void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& viewProjection) {
     const VkCommandBuffer commandBuffer = commandBuffer_.nativeHandle();
-    const float elapsedSeconds = std::chrono::duration<float>(duration).count();
 
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
@@ -343,6 +339,7 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, const std::chrono::
     VkDeviceSize vertexBufferOffset = 0;
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, &vertexBuffer_, &vertexBufferOffset);
     vkCmdBindIndexBuffer(commandBuffer, indexBuffer_, 0, VK_INDEX_TYPE_UINT16);
+
     /// Rendering start //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
 
@@ -361,15 +358,9 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, const std::chrono::
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_.nativeHandle());
-    const float movement = std::sin(elapsedSeconds) * 0.5F;
-    glm::vec2 offset{0.0F, -0.5F + movement};
-    vkCmdPushConstants(commandBuffer, graphicsPipeline_.layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec2), &offset);
-    vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
+    vkCmdPushConstants(commandBuffer, graphicsPipeline_.layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjection);
 
-    offset = glm::vec2{0.0F, 0.5F - movement};
-    vkCmdPushConstants(commandBuffer, graphicsPipeline_.layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::vec2), &offset);
     vkCmdDrawIndexed(commandBuffer, 6, 1, 0, 0, 0);
-
     vkCmdEndRendering(commandBuffer);
     /// Rendering end ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 

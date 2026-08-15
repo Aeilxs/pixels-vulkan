@@ -5,6 +5,7 @@
 
 namespace ps::renderer {
 
+/// @brief Vertex format used by the current indexed-quad rendering path.
 struct Vertex {
     glm::vec2 pos;
     glm::vec3 color;

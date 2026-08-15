@@ -7,15 +7,16 @@ namespace ps::renderer::vulkan {
 class Device;
 class Swapchain;
 
-/// @brief Owns the graphics pipeline used by the initial triangle renderer.
+/// @brief Owns the graphics pipeline used by the current renderer.
 ///
-/// The pipeline uses Vulkan 1.3 dynamic rendering, has no vertex buffers or descriptors,
-/// and leaves viewport and scissor state dynamic so they can follow the swapchain extent.
+/// The pipeline uses Vulkan 1.3 dynamic rendering, consumes the current vertex format,
+/// uses no descriptor sets, and leaves viewport and scissor state dynamic so they can
+/// follow the swapchain extent.
 ///
 /// @note The logical Vulkan device used to create this pipeline must outlive it.
 class GraphicsPipeline final {
    public:
-    /// @brief Creates the initial graphics pipeline for the swapchain color format.
+    /// @brief Creates the graphics pipeline for the swapchain color format.
     /// @param device Logical device that owns the pipeline and pipeline layout.
     /// @param swapchain Swapchain providing the color attachment format.
     /// @throws std::runtime_error If shader loading or Vulkan pipeline creation fails.
@@ -34,6 +35,7 @@ class GraphicsPipeline final {
     [[nodiscard("The Vulkan graphics pipeline handle must be used")]]
     VkPipeline nativeHandle() const noexcept;
 
+    /// @brief Returns the pipeline layout used for push constants and resource bindings.
     [[nodiscard("The Vulkan graphics pipeline layout handle must be used")]]
     VkPipelineLayout layout() const noexcept;
 

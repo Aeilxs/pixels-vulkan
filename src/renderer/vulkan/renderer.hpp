@@ -5,8 +5,8 @@
 #include "renderer/vulkan/frame_synchronization.hpp"
 #include "renderer/vulkan/graphics_pipeline.hpp"
 
-#include <chrono>
 #include <cstdint>
+#include <glm/mat4x4.hpp>
 #include <vulkan/vulkan.h>
 
 namespace ps::renderer::vulkan {
@@ -30,7 +30,7 @@ class Swapchain;
 /// this object.
 class Renderer final {
    public:
-    /// @brief Creates the resources required by the initial Vulkan renderer.
+    /// @brief Creates the resources required by the Vulkan renderer.
     /// @param physicalDevice Physical device providing the graphics queue family.
     /// @param device Logical device and graphics/presentation queues used for rendering.
     /// @param swapchain Swapchain whose images are rendered and presented.
@@ -47,6 +47,7 @@ class Renderer final {
     Renderer& operator=(Renderer&&) = delete;
 
     /// @brief Renders and presents one frame.
+    /// @param viewProjection Camera matrix transforming world positions to clip coordinates.
     ///
     /// Waits for the previous frame, acquires a swapchain image, records the
     /// primary command buffer, submits it to the graphics queue and presents
@@ -55,7 +56,7 @@ class Renderer final {
     /// @throws std::runtime_error If a Vulkan operation fails or the swapchain
     /// becomes out of date. Swapchain recreation is intentionally deferred until
     /// the resize lifecycle is implemented.
-    void drawFrame();
+    void drawFrame(const glm::mat4& viewProjection);
 
    private:
     void createVertexBuffer();
@@ -67,10 +68,11 @@ class Renderer final {
     VkBuffer indexBuffer_ = VK_NULL_HANDLE;
     VkDeviceMemory indexBufferMemory_ = VK_NULL_HANDLE;
     VkDeviceMemory vertexBufferMemory_ = VK_NULL_HANDLE;
-    /// @brief Records all commands required to draw the current triangle frame.
+    /// @brief Records the graphics commands for the acquired swapchain image.
     /// @param imageIndex Index of the swapchain image acquired for this frame.
+    /// @param viewProjection Camera matrix transforming world positions to clip coordinates.
     /// @throws std::runtime_error If command-buffer recording cannot begin or end.
-    void recordCommandBuffer(std::uint32_t imageIndex, const std::chrono::steady_clock::duration& duration);
+    void recordCommandBuffer(std::uint32_t imageIndex, const glm::mat4& viewProjection);
 
     VkPhysicalDevice physicalDevice_{VK_NULL_HANDLE};
     VkDevice device_{VK_NULL_HANDLE};
@@ -83,8 +85,6 @@ class Renderer final {
     CommandPool commandPool_;
     CommandBuffer commandBuffer_;
     FrameSynchronization synchronization_;
-
-    std::chrono::steady_clock::time_point startTime_;
 };
 
 }  // namespace ps::renderer::vulkan

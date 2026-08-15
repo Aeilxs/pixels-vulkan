@@ -8,7 +8,7 @@ namespace ps::renderer::vulkan {
 
 class Device;
 
-/// @brief Owns the synchronization primitives used by the single-frame bootstrap renderer.
+/// @brief Owns the synchronization primitives used by the single-frame-in-flight renderer.
 ///
 /// One semaphore signals swapchain image acquisition, one fence prevents the CPU from
 /// re-recording the command buffer while the GPU is still using it, and one render-finished

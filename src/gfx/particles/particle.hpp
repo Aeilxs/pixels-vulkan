@@ -4,6 +4,8 @@
 #include <glm/vec4.hpp>
 
 namespace ps::gfx::particles {
+
+/// @brief CPU-side state of one particle in world coordinates.
 struct Particle {
     glm::vec2 position{};
     glm::vec2 origin{};
