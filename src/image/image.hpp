@@ -14,7 +14,7 @@ struct Pixel {
     std::uint8_t a{};
 };
 
-static_assert(sizeof(Pixel) == 4);
+static_assert(sizeof(Pixel) == 4, "Pixel struct must be 4 bytes in size");
 
 struct Image {
     std::uint32_t width{};
