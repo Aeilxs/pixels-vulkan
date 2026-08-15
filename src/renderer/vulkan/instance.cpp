@@ -1,6 +1,5 @@
-#include "renderer/vulkan/instance.hpp"
-
 #include "app/config.hpp"
+#include "renderer/vulkan/instance.hpp"
 
 #include <SDL3/SDL_vulkan.h>
 #include <cstdint>

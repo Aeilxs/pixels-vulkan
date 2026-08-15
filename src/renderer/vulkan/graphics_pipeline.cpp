@@ -1,8 +1,7 @@
+#include "renderer/vertex.hpp"
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/graphics_pipeline.hpp"
 #include "renderer/vulkan/swapchain.hpp"
-
-#include "renderer/vertex.hpp"
 
 #include <cstddef>
 #include <cstdint>

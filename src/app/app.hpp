@@ -1,16 +1,15 @@
 #pragma once
 
+#include "app/cli.hpp"
+#include "gfx/particles/system.hpp"
 #include "platform/sdl_context.hpp"
 #include "platform/window.hpp"
-
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/instance.hpp"
 #include "renderer/vulkan/physical_device.hpp"
 #include "renderer/vulkan/renderer.hpp"
 #include "renderer/vulkan/surface.hpp"
 #include "renderer/vulkan/swapchain.hpp"
-
-#include "app/cli.hpp"
 
 namespace ps::app {
 class App {
@@ -29,6 +28,8 @@ class App {
     ps::renderer::vulkan::Device device_;
     ps::renderer::vulkan::Swapchain swapchain_;
     ps::renderer::vulkan::Renderer renderer_;
+
+    ps::gfx::particles::ParticleSystem particleSystem_;
 
     bool running_{true};
 

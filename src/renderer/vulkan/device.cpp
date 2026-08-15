@@ -1,7 +1,6 @@
+#include "app/config.hpp"
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/physical_device.hpp"
-
-#include "app/config.hpp"
 
 #include <cstdint>
 #include <stdexcept>

@@ -1,0 +1,13 @@
+#pragma once
+
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
+
+namespace ps::gfx::particles {
+struct Particle {
+    glm::vec2 position{};
+    glm::vec2 origin{};
+    glm::vec2 velocity{};
+    glm::vec4 color{};
+};
+}  // namespace ps::gfx::particles

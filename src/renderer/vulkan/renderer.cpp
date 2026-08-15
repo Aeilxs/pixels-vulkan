@@ -1,9 +1,8 @@
+#include "renderer/vertex.hpp"
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/physical_device.hpp"
 #include "renderer/vulkan/renderer.hpp"
 #include "renderer/vulkan/swapchain.hpp"
-
-#include "renderer/vertex.hpp"
 
 #include <chrono>
 #include <cmath>

@@ -61,6 +61,10 @@ add_executable(
     src/app/app.cpp
     src/app/cli.cpp
 
+    src/gfx/particles/system.cpp
+
+    src/image/image.cpp
+
     src/platform/sdl_context.cpp
     src/platform/window.cpp
 
@@ -80,6 +84,8 @@ add_dependencies(Pixel_Storm Pixel_StormShaders)
 
 target_include_directories(
     Pixel_Storm
+    SYSTEM PRIVATE
+        "${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb"
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
 )

@@ -1,5 +1,4 @@
 #include "platform/window.hpp"
-
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/physical_device.hpp"
 #include "renderer/vulkan/surface.hpp"

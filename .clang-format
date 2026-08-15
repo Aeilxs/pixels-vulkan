@@ -18,21 +18,10 @@ SpacesInAngles: false
 SpaceInEmptyParentheses: false
 IndentCaseLabels: true
 IncludeCategories:
-  # Keep project includes grouped by directory, then external/system headers.
-  # Negative priorities prevent the automatic "main header" category from
-  # splitting a directory group.
-  - Regex: '^"[^/"]+"$'
-    Priority: -30
-  - Regex: '^"platform/'
-    Priority: -20
-  - Regex: '^"renderer/vulkan/'
-    Priority: -10
-  - Regex: '^"renderer/'
-    Priority: -5
   - Regex: '^"'
     Priority: -1
   - Regex: '^<'
-    Priority: 10
+    Priority: 1
 IncludeBlocks: Regroup
 SortIncludes: true
 AlwaysBreakBeforeMultilineStrings: true

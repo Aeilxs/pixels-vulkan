@@ -1,9 +1,8 @@
+#include "app/config.hpp"
 #include "renderer/vulkan/instance.hpp"
 #include "renderer/vulkan/physical_device.hpp"
 #include "renderer/vulkan/queue_family_indices.hpp"
 #include "renderer/vulkan/surface.hpp"
-
-#include "app/config.hpp"
 
 #include <cstdint>
 #include <stdexcept>
