@@ -1,13 +1,11 @@
 #include "app/app.hpp"
 #include "app/cli.hpp"
-#include "image/image.hpp"
 
 #include <exception>
 #include <iostream>
 
 namespace cli = ps::app::cli;
 using ps::app::App;
-using ps::image::Image;
 
 int run(int argc, char* argv[]) {
     const cli::AppOptions options = cli::parse(argc, argv);
