@@ -64,26 +64,30 @@ void ParticleSystem::randomize() {
 void ParticleSystem::update(float dt, const glm::vec2& mousePosition) {
     constexpr float stiffness = 20.0F;
     constexpr float damping = 3.0F;
-    constexpr float inputRadius = 400.0F;
-    constexpr float repulseForce = 5000.0F;
+
+    constexpr float radius = 400.0F;
+    constexpr float repulsion = 5000.0F;
+    constexpr float minDistance2 = 0.0001F;
+
+    const float radius2 = radius * radius;
+    const float dampingFactor = std::exp(-damping * dt);
 
     for (Particle& p : particles_) {
         const glm::vec2 displacement = p.origin - p.position;
         p.velocity += displacement * stiffness * dt;
-        p.velocity *= std::exp(-damping * dt);
-        const glm::vec2 toMouse = p.position - mousePosition;
 
-        const float distanceSquared = glm::length2(toMouse);
+        const glm::vec2 delta = p.position - mousePosition;
+        const float distance2 = glm::length2(delta);
 
-        const float radiusSquared = inputRadius * inputRadius;
+        if (distance2 < radius2 && distance2 > minDistance2) {
+            const float distance = std::sqrt(distance2);
+            const glm::vec2 direction = delta / distance;
+            const float falloff = 1.0F - distance / radius;
 
-        if (distanceSquared >= radiusSquared) {
-            continue;
+            p.velocity += direction * repulsion * falloff * dt;
         }
 
-        const float distance = std::sqrt(distanceSquared);
-        const glm::vec2 repulseDir = glm::normalize(toMouse);
-        p.velocity += repulseDir * repulseForce * (1.0F - distance / inputRadius) * dt;
+        p.velocity *= dampingFactor;
         p.position += p.velocity * dt;
     }
 }
