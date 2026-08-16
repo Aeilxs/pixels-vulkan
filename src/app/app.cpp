@@ -4,10 +4,9 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <chrono>
-#include <iostream>
 
 namespace {
-// Use the actual logical window size; the window manager may adjust the size requested at creation...
+// Use the actual logical window size; the window manager may adjust the size requested at creation.
 glm::vec2 windowLogicalSize(const ps::platform::Window& window) {
     const ps::platform::Window::LogicalSize size = window.logicalSize();
 
@@ -42,7 +41,7 @@ void App::run() {
     auto previousTime = std::chrono::steady_clock::now();
     while (running_) {
         const auto currentTime = std::chrono::steady_clock::now();
-        // Limit dt to avoid large jumps when debugging
+        // Limit dt to avoid large jumps when debugging.
         const float dt = std::min(std::chrono::duration<float>(currentTime - previousTime).count(), 0.05F);
         previousTime = currentTime;
         pollEvents();
@@ -58,7 +57,7 @@ void App::pollEvents() {
     while (SDL_PollEvent(&event)) {
         switch (event.type) {
             case SDL_EVENT_QUIT: running_ = false; break;
-            case SDL_EVENT_MOUSE_MOTION: mousePosition(event.motion); break;
+            case SDL_EVENT_MOUSE_MOTION: handleMouseMotion(event.motion); break;
             case SDL_EVENT_KEY_DOWN: handleKeyDown(event.key.key); break;
             default: break;
         }
@@ -83,8 +82,7 @@ void App::handleKeyDown(SDL_Keycode keycode) {
     }
 }
 
-glm::vec2 App::mousePosition(const SDL_MouseMotionEvent& motion) {
-    mousePosition_ = glm::vec2{static_cast<float>(motion.x), static_cast<float>(motion.y)};
-    return mousePosition_;
+void App::handleMouseMotion(const SDL_MouseMotionEvent& motion) {
+    mousePosition_ = glm::vec2{motion.x, motion.y};
 }
 }  // namespace ps::app

@@ -1,4 +1,3 @@
-#include "app/config.hpp"
 #include "vulkan/config.hpp"
 #include "vulkan/instance.hpp"
 

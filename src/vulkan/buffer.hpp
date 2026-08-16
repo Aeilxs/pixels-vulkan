@@ -15,14 +15,6 @@ class Device;
 /// @note The logical device supplied at construction must outlive this object.
 class Buffer {
    public:
-    /// @brief Creates a Vulkan buffer, allocates compatible memory and binds it.
-    /// @param physicalDevice Physical device used to select a compatible memory type.
-    /// @param device Logical device used to create the buffer and allocate memory.
-    /// @param size Requested buffer size in bytes. Must be greater than zero.
-    /// @param usage Vulkan usage flags describing how the buffer will be used.
-    /// @param requiredMemoryProperties Memory properties required from the selected memory type.
-    /// @throws std::invalid_argument If @p size is zero.
-    /// @throws std::runtime_error If Vulkan buffer creation, allocation or binding fails.
     Buffer(
         const PhysicalDevice& physicalDevice,
         const Device& device,
@@ -31,24 +23,16 @@ class Buffer {
         VkMemoryPropertyFlags requiredMemoryProperties
     );
 
-    /// @brief Releases the owned Vulkan buffer and device memory.
     ~Buffer();
     Buffer(const Buffer&) = delete;
     Buffer& operator=(const Buffer&) = delete;
-    /// @brief Transfers ownership of another buffer's Vulkan resources.
     Buffer(Buffer&& other) noexcept;
     Buffer& operator=(Buffer&& other) = delete;
 
-    /// @brief Copies bytes into host-visible, host-coherent buffer memory.
-    /// @param data Source bytes to copy. Must not be null.
-    /// @param size Number of bytes to write. Must fit in the allocation.
-    /// @throws std::invalid_argument If the source pointer or size is invalid.
-    /// @throws std::logic_error If the buffer was not created with host-visible
-    ///         and host-coherent memory requirements.
-    /// @throws std::runtime_error If Vulkan fails to map the memory.
+    // Current implementation maps on each write and requires memory requested as
+    // both HOST_VISIBLE and HOST_COHERENT.
     void write(const void* data, VkDeviceSize size);
 
-    /// @brief Returns the owned Vulkan buffer handle.
     [[nodiscard]]
     VkBuffer nativeHandle() const noexcept;
 

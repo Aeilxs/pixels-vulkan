@@ -11,14 +11,8 @@ namespace ps::platform {
 /// nor movable to keep ownership of the native SDL handle unambiguous.
 class Window final {
    public:
-    /// @brief Creates a Vulkan-capable SDL window.
-    /// @param title Null-terminated window title.
-    /// @param width Initial width in logical pixels.
-    /// @param height Initial height in logical pixels.
-    /// @throws std::runtime_error If SDL cannot create the window.
     Window(const char* title, int width, int height);
 
-    /// @brief Destroys the owned SDL window.
     ~Window();
 
     Window(const Window&) = delete;
@@ -27,7 +21,6 @@ class Window final {
     Window(Window&&) = delete;
     Window& operator=(Window&&) = delete;
 
-    /// @brief Physical drawable size of a window, expressed in pixels.
     struct DrawableSize {
         int width = 0;
         int height = 0;
@@ -38,17 +31,12 @@ class Window final {
         int height = 0;
     };
 
-    /// @brief Returns the current drawable size of the window in physical pixels.
-    /// @return Current drawable width and height.
-    /// @throws std::runtime_error If SDL cannot query the window size.
     [[nodiscard("Drawable size must be used")]]
     DrawableSize drawableSize() const;
 
     [[nodiscard("Logical size must be used")]]
     LogicalSize logicalSize() const;
 
-    /// @brief Returns the native SDL window handle without transferring ownership.
-    /// @return The owned SDL window handle, valid for this object's lifetime.
     [[nodiscard("SDL window handle must be used")]]
     SDL_Window* nativeHandle() const noexcept;
 

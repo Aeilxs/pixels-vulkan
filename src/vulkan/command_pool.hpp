@@ -16,13 +16,8 @@ class PhysicalDevice;
 /// @note The logical Vulkan device used to create this pool must outlive it.
 class CommandPool final {
    public:
-    /// @brief Creates a command pool for the selected graphics queue family.
-    /// @param physicalDevice Physical device providing the graphics queue family.
-    /// @param device Logical device that owns the command pool.
-    /// @throws std::runtime_error If Vulkan cannot create the command pool.
     CommandPool(const PhysicalDevice& physicalDevice, const Device& device);
 
-    /// @brief Destroys the owned Vulkan command pool.
     ~CommandPool();
 
     CommandPool(const CommandPool&) = delete;
@@ -31,8 +26,6 @@ class CommandPool final {
     CommandPool(CommandPool&&) = delete;
     CommandPool& operator=(CommandPool&&) = delete;
 
-    /// @brief Returns the native Vulkan command-pool handle without transferring ownership.
-    /// @return The owned command-pool handle, valid for this object's lifetime.
     [[nodiscard("The Vulkan command pool handle must be used")]]
     VkCommandPool nativeHandle() const noexcept;
 

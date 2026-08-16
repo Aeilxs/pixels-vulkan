@@ -22,11 +22,8 @@ namespace ps::app {
 /// resources, the 2D camera, then the Vulkan bootstrap and renderer objects.
 class App {
    public:
-    /// @brief Builds the runtime state from the validated command-line options.
-    /// @param options Startup options used to load the initial particle image.
     App(const cli::AppOptions& options);
 
-    /// @brief Runs the event/render loop until the application is asked to stop.
     void run();
 
    private:
@@ -50,6 +47,6 @@ class App {
 
     void pollEvents();
     void handleKeyDown(SDL_Keycode keycode);
-    glm::vec2 mousePosition(const SDL_MouseMotionEvent& motion);
+    void handleMouseMotion(const SDL_MouseMotionEvent& motion);
 };
 }  // namespace ps::app

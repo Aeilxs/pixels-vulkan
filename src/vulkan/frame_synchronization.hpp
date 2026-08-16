@@ -17,13 +17,8 @@ class Device;
 /// @note The logical Vulkan device used to create these objects must outlive this object.
 class FrameSynchronization final {
    public:
-    /// @brief Creates synchronization primitives for one frame in flight.
-    /// @param device Logical device that owns the synchronization objects.
-    /// @param swapchainImageCount Number of images owned by the current swapchain.
-    /// @throws std::runtime_error If Vulkan cannot create a semaphore or fence.
     FrameSynchronization(const Device& device, std::size_t swapchainImageCount);
 
-    /// @brief Destroys the owned fence and semaphores.
     ~FrameSynchronization();
 
     FrameSynchronization(const FrameSynchronization&) = delete;
@@ -32,18 +27,12 @@ class FrameSynchronization final {
     FrameSynchronization(FrameSynchronization&&) = delete;
     FrameSynchronization& operator=(FrameSynchronization&&) = delete;
 
-    /// @brief Returns the semaphore signaled when a swapchain image becomes available.
     [[nodiscard("The Vulkan image-available semaphore must be used")]]
     VkSemaphore imageAvailable() const noexcept;
 
-    /// @brief Returns the presentation wait semaphore associated with a swapchain image.
-    /// @param imageIndex Index returned by vkAcquireNextImageKHR.
-    /// @return Render-finished semaphore dedicated to that swapchain image.
-    /// @throws std::out_of_range If imageIndex is outside the swapchain image range.
     [[nodiscard("The Vulkan render-finished semaphore must be used")]]
     VkSemaphore renderFinished(std::size_t imageIndex) const;
 
-    /// @brief Returns the fence signaled when the submitted frame finishes on the GPU.
     [[nodiscard("The Vulkan in-flight fence must be used")]]
     VkFence inFlightFence() const noexcept;
 

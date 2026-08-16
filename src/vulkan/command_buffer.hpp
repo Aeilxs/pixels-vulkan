@@ -18,13 +18,8 @@ class Device;
 /// execution when it is destroyed.
 class CommandBuffer final {
    public:
-    /// @brief Allocates one primary command buffer from the supplied pool.
-    /// @param device Logical device used to allocate and free the command buffer.
-    /// @param commandPool Command pool from which the command buffer is allocated.
-    /// @throws std::runtime_error If Vulkan cannot allocate the command buffer.
     CommandBuffer(const Device& device, const CommandPool& commandPool);
 
-    /// @brief Frees the owned Vulkan command buffer.
     ~CommandBuffer();
 
     CommandBuffer(const CommandBuffer&) = delete;
@@ -33,8 +28,6 @@ class CommandBuffer final {
     CommandBuffer(CommandBuffer&&) = delete;
     CommandBuffer& operator=(CommandBuffer&&) = delete;
 
-    /// @brief Returns the native Vulkan command-buffer handle without transferring ownership.
-    /// @return The owned command-buffer handle, valid for this object's lifetime.
     [[nodiscard("The Vulkan command buffer handle must be used")]]
     VkCommandBuffer nativeHandle() const noexcept;
 

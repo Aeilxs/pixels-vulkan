@@ -17,14 +17,8 @@ class Instance;
 /// The surface is intentionally neither copyable nor movable.
 class Surface final {
    public:
-    /// @brief Creates a Vulkan surface for an SDL window.
-    /// @param instance Vulkan instance used to create and later destroy the surface.
-    /// @param window SDL window associated with the presentation surface.
-    /// @pre Both @p instance and @p window must outlive this surface.
-    /// @throws std::runtime_error If SDL cannot create the Vulkan surface.
     Surface(const Instance& instance, const ps::platform::Window& window);
 
-    /// @brief Destroys the owned Vulkan surface.
     ~Surface();
 
     Surface(const Surface&) = delete;
@@ -33,8 +27,6 @@ class Surface final {
     Surface(Surface&&) = delete;
     Surface& operator=(Surface&&) = delete;
 
-    /// @brief Returns the native Vulkan surface handle without transferring ownership.
-    /// @return The owned Vulkan surface handle, valid for this object's lifetime.
     [[nodiscard("The Vulkan surface handle must be used")]]
     VkSurfaceKHR nativeHandle() const;
 
