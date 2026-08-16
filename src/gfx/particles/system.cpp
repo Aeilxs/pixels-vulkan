@@ -1,9 +1,11 @@
+#include "gfx/colors/colors.hpp"
 #include "gfx/particles/system.hpp"
 
 #include <cmath>
 #include <cstddef>
 #include <random>
 #define GLM_ENABLE_EXPERIMENTAL
+
 #include <glm/gtx/norm.hpp>
 #include <stdexcept>
 #include <utility>
@@ -35,10 +37,10 @@ ParticleSystem ParticleSystem::fromImage(const image::Image& image, std::uint32_
             particle.position = glm::vec2{static_cast<float>(x), static_cast<float>(y)};
             particle.origin = particle.position;
             particle.color = glm::vec4{
-                static_cast<float>(pixel.r) / 255.0f,
-                static_cast<float>(pixel.g) / 255.0f,
-                static_cast<float>(pixel.b) / 255.0f,
-                static_cast<float>(pixel.a) / 255.0f
+                ps::gfx::colors::srgb8ToLinear(pixel.r),
+                ps::gfx::colors::srgb8ToLinear(pixel.g),
+                ps::gfx::colors::srgb8ToLinear(pixel.b),
+                static_cast<float>(pixel.a) / 255.0F
             };
             particles.push_back(particle);
         }
