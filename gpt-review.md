@@ -1800,15 +1800,16 @@ Je la structurerais comme ça, avec un ordre qui garde le projet fun **et** fait
     - [x] `velocity`
     - [x] damping / friction
     - [x] `dt` clamp raisonnable
-  - [ ] Répulsion souris
-    - [ ] récupérer position souris SDL
-    - [ ] `Camera2D::screenToWorld()`
-    - [ ] rayon d'influence
-    - [ ] test distance² sans `sqrt` si inutile
-    - [ ] force de répulsion
-    - [ ] activation au clic / état input
-  - [ ] Garder `randomize()` comme action de test
-  - [ ] Vérifier comportement à 500k / 1M / 2M particules
+  - [x] Répulsion souris
+    - [x] récupérer position souris SDL
+    - [x] `Camera2D::screenToWorld()`
+    - [x] rayon d'influence
+    - [x] test distance² sans `sqrt` si inutile
+    - [x] force de répulsion
+  - [x] Vérifier comportement à 500k / 1M / 2M particules (sans debugging, au doigt mouillé)
+    - 4791189 : full lag
+    - 1197652 : ~30 fps
+    - 532335  : Très fluide
 - [ ] **Milestone 3 — Petit cleanup avant de toucher l'architecture**
   - [ ] `app/config.hpp`
     - [ ] sortir les constantes Vulkan de la couche `app`
