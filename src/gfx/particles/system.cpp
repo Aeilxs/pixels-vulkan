@@ -59,7 +59,7 @@ void ParticleSystem::randomize() {
 }
 
 void ParticleSystem::update(float dt) {
-    constexpr float speed = 5.0F;
+    constexpr float speed = 2.0F;
 
     for (Particle& particle : particles_) {
         const glm::vec2 delta = particle.origin - particle.position;

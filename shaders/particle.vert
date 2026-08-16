@@ -7,9 +7,11 @@ layout(location = 0) out vec4 fragmentColor;
 
 layout(push_constant) uniform PushConstants {
     mat4 viewProjection;
-} pushConstants;
+}
+pushConstants;
 
 void main() {
     gl_Position = pushConstants.viewProjection * vec4(position, 0.0, 1.0);
+    gl_PointSize = 5.0;
     fragmentColor = color;
 }
