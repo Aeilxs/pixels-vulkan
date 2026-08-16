@@ -33,11 +33,19 @@ class Window final {
         int height = 0;
     };
 
+    struct LogicalSize {
+        int width = 0;
+        int height = 0;
+    };
+
     /// @brief Returns the current drawable size of the window in physical pixels.
     /// @return Current drawable width and height.
     /// @throws std::runtime_error If SDL cannot query the window size.
     [[nodiscard("Drawable size must be used")]]
     DrawableSize drawableSize() const;
+
+    [[nodiscard("Logical size must be used")]]
+    LogicalSize logicalSize() const;
 
     /// @brief Returns the native SDL window handle without transferring ownership.
     /// @return The owned SDL window handle, valid for this object's lifetime.

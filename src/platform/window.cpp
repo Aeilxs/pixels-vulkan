@@ -31,6 +31,15 @@ Window::DrawableSize Window::drawableSize() const {
     return size;
 }
 
+Window::LogicalSize Window::logicalSize() const {
+    LogicalSize size{};
+    if (!SDL_GetWindowSize(handle_, &size.width, &size.height)) {
+        throw std::runtime_error("Failed to get SDL window size: " + std::string(SDL_GetError()));
+    }
+
+    return size;
+}
+
 SDL_Window* Window::nativeHandle() const noexcept {
     return handle_;
 }

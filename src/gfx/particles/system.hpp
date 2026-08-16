@@ -36,7 +36,7 @@ class ParticleSystem {
     ImageDimensions imageDimensions() const noexcept;
 
     void randomize();
-    void update(float dt);
+    void update(float dt, const glm::vec2& mousePosition);
 
    private:
     std::vector<Particle> particles_;

@@ -44,9 +44,12 @@ class App {
     ps::renderer::vulkan::Swapchain swapchain_;
     ps::renderer::vulkan::Renderer renderer_;
 
+    glm::vec2 mousePosition_{0.0F, 0.0F};
+
     bool running_{true};
 
     void pollEvents();
-    void handleKeyPress(SDL_Keycode keycode);
+    void handleKeyDown(SDL_Keycode keycode);
+    glm::vec2 mousePosition(const SDL_MouseMotionEvent& motion);
 };
 }  // namespace ps::app
