@@ -1,10 +1,10 @@
 #pragma once
 
-#include "renderer/vulkan/queue_family_indices.hpp"
+#include "vulkan/queue_family_indices.hpp"
 
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class Instance;
 class Surface;
@@ -50,4 +50,4 @@ class PhysicalDevice final {
     VkPhysicalDeviceMemoryProperties memoryProperties_{};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

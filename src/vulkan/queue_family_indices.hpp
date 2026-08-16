@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <optional>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 /// @brief Queue family indices required by the renderer.
 struct QueueFamilyIndices {
@@ -21,4 +21,4 @@ struct QueueFamilyIndices {
     }
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

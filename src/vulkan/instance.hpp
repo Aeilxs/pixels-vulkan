@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 /// @brief Owns the Vulkan instance used by the renderer.
 ///
@@ -34,4 +34,4 @@ class Instance final {
     VkInstance handle_{VK_NULL_HANDLE};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

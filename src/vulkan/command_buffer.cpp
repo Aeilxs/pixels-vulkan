@@ -1,11 +1,11 @@
-#include "renderer/vulkan/command_buffer.hpp"
-#include "renderer/vulkan/command_pool.hpp"
-#include "renderer/vulkan/device.hpp"
+#include "vulkan/command_buffer.hpp"
+#include "vulkan/command_pool.hpp"
+#include "vulkan/device.hpp"
 
 #include <stdexcept>
 #include <string>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 CommandBuffer::CommandBuffer(const Device& device, const CommandPool& commandPool)
     : device_{device.nativeHandle()}, commandPool_{commandPool.nativeHandle()} {
@@ -31,4 +31,4 @@ VkCommandBuffer CommandBuffer::nativeHandle() const noexcept {
     return handle_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

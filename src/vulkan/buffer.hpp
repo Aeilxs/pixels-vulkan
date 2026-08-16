@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 class PhysicalDevice;
 class Device;
 
@@ -63,4 +63,4 @@ class Buffer {
     void destroy() noexcept;
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

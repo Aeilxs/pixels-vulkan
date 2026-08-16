@@ -1,12 +1,12 @@
-#include "renderer/vulkan/buffer.hpp"
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/physical_device.hpp"
+#include "vulkan/buffer.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/physical_device.hpp"
 
 #include <cstring>
 #include <stdexcept>
 #include <string>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 Buffer::Buffer(
     const PhysicalDevice& physicalDevice,
     const Device& device,
@@ -115,9 +115,8 @@ Buffer::Buffer(Buffer&& other) noexcept
     other.requiredMemoryProperties_ = 0;
 }
 
-
 VkBuffer Buffer::nativeHandle() const noexcept {
     return buffer_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

@@ -69,17 +69,17 @@ add_executable(
     src/platform/sdl_context.cpp
     src/platform/window.cpp
 
-    src/renderer/vulkan/buffer.cpp
-    src/renderer/vulkan/command_buffer.cpp
-    src/renderer/vulkan/command_pool.cpp
-    src/renderer/vulkan/device.cpp
-    src/renderer/vulkan/frame_synchronization.cpp
-    src/renderer/vulkan/graphics_pipeline.cpp
-    src/renderer/vulkan/instance.cpp
-    src/renderer/vulkan/physical_device.cpp
-    src/renderer/vulkan/renderer.cpp
-    src/renderer/vulkan/surface.cpp
-    src/renderer/vulkan/swapchain.cpp
+    src/vulkan/buffer.cpp
+    src/vulkan/command_buffer.cpp
+    src/vulkan/command_pool.cpp
+    src/vulkan/device.cpp
+    src/vulkan/frame_synchronization.cpp
+    src/vulkan/graphics_pipeline.cpp
+    src/vulkan/instance.cpp
+    src/vulkan/physical_device.cpp
+    src/vulkan/renderer.cpp
+    src/vulkan/surface.cpp
+    src/vulkan/swapchain.cpp
 )
 
 add_dependencies(Pixel_Storm Pixel_StormShaders)

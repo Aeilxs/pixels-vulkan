@@ -5,12 +5,12 @@
 #include "gfx/particles/system.hpp"
 #include "platform/sdl_context.hpp"
 #include "platform/window.hpp"
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/instance.hpp"
-#include "renderer/vulkan/physical_device.hpp"
-#include "renderer/vulkan/renderer.hpp"
-#include "renderer/vulkan/surface.hpp"
-#include "renderer/vulkan/swapchain.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/instance.hpp"
+#include "vulkan/physical_device.hpp"
+#include "vulkan/renderer.hpp"
+#include "vulkan/surface.hpp"
+#include "vulkan/swapchain.hpp"
 
 #include <SDL3/SDL.h>
 
@@ -37,12 +37,12 @@ class App {
 
     ps::gfx::Camera2D camera_;
 
-    ps::renderer::vulkan::Instance vulkanInstance_;
-    ps::renderer::vulkan::Surface vulkanSurface_;
-    ps::renderer::vulkan::PhysicalDevice physicalDevice_;
-    ps::renderer::vulkan::Device device_;
-    ps::renderer::vulkan::Swapchain swapchain_;
-    ps::renderer::vulkan::Renderer renderer_;
+    ps::vulkan::Instance vulkanInstance_;
+    ps::vulkan::Surface vulkanSurface_;
+    ps::vulkan::PhysicalDevice physicalDevice_;
+    ps::vulkan::Device device_;
+    ps::vulkan::Swapchain swapchain_;
+    ps::vulkan::Renderer renderer_;
 
     glm::vec2 mousePosition_{0.0F, 0.0F};
 

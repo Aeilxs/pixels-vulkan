@@ -1,7 +1,7 @@
 #include "gfx/particles/particle.hpp"
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/graphics_pipeline.hpp"
-#include "renderer/vulkan/swapchain.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/graphics_pipeline.hpp"
+#include "vulkan/swapchain.hpp"
 
 #include <cstddef>
 #include <cstdint>
@@ -18,7 +18,7 @@
 
 using ps::gfx::particles::Particle;
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 namespace {
 
 [[nodiscard("The loaded SPIR-V shader code must be used")]]
@@ -246,4 +246,4 @@ VkPipelineLayout GraphicsPipeline::layout() const noexcept {
     return layout_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

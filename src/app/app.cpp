@@ -22,7 +22,7 @@ namespace ps::app {
 App::App(const cli::AppOptions& options)
     : particleSystem_{gfx::particles::ParticleSystem::fromImage(ps::image::load(options.image_path), options.gap)},
       sdlContext_{},
-      window_{config::applicationName, config::initialWindowWidth, config::initialWindowHeight},
+      window_{config::windowName, config::initialWindowWidth, config::initialWindowHeight},
       camera_{windowLogicalSize(window_), 1.0F},
       vulkanInstance_{},
       vulkanSurface_{vulkanInstance_, window_},

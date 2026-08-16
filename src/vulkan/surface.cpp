@@ -1,12 +1,12 @@
 #include "platform/window.hpp"
-#include "renderer/vulkan/instance.hpp"
-#include "renderer/vulkan/surface.hpp"
+#include "vulkan/instance.hpp"
+#include "vulkan/surface.hpp"
 
 #include <SDL3/SDL_vulkan.h>
 #include <stdexcept>
 #include <string>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 Surface::Surface(const Instance& instance, const ps::platform::Window& window) : instance_{instance.nativeHandle()} {
     if (!SDL_Vulkan_CreateSurface(window.nativeHandle(), instance_, nullptr, &handle_)) {
@@ -24,4 +24,4 @@ VkSurfaceKHR Surface::nativeHandle() const {
     return handle_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

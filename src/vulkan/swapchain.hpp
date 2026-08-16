@@ -7,7 +7,7 @@ namespace ps::platform {
 class Window;
 }
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class Device;
 class PhysicalDevice;
@@ -76,4 +76,4 @@ class Swapchain final {
     VkExtent2D extent_{};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

@@ -6,7 +6,7 @@ namespace ps::platform {
 class Window;
 }
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class Instance;
 
@@ -43,4 +43,4 @@ class Surface final {
     VkSurfaceKHR handle_{VK_NULL_HANDLE};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

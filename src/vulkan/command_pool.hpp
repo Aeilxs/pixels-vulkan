@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class Device;
 class PhysicalDevice;
@@ -41,4 +41,4 @@ class CommandPool final {
     VkCommandPool handle_{VK_NULL_HANDLE};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

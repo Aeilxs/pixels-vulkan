@@ -4,7 +4,7 @@
 #include <vector>
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class Device;
 
@@ -54,4 +54,4 @@ class FrameSynchronization final {
     VkFence inFlightFence_{VK_NULL_HANDLE};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

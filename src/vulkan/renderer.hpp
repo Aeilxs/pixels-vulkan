@@ -1,18 +1,18 @@
 #pragma once
 
 #include "gfx/particles/particle.hpp"
-#include "renderer/vulkan/buffer.hpp"
-#include "renderer/vulkan/command_buffer.hpp"
-#include "renderer/vulkan/command_pool.hpp"
-#include "renderer/vulkan/frame_synchronization.hpp"
-#include "renderer/vulkan/graphics_pipeline.hpp"
+#include "vulkan/buffer.hpp"
+#include "vulkan/command_buffer.hpp"
+#include "vulkan/command_pool.hpp"
+#include "vulkan/frame_synchronization.hpp"
+#include "vulkan/graphics_pipeline.hpp"
 
 #include <cstdint>
 #include <glm/mat4x4.hpp>
 #include <span>
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class Device;
 class PhysicalDevice;
@@ -89,4 +89,4 @@ class Renderer final {
     std::uint32_t particleCount_{0};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

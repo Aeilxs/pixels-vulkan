@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class PhysicalDevice;
 
@@ -53,4 +53,4 @@ class Device final {
     VkQueue presentQueue_{VK_NULL_HANDLE};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

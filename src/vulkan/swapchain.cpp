@@ -1,8 +1,8 @@
 #include "platform/window.hpp"
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/physical_device.hpp"
-#include "renderer/vulkan/surface.hpp"
-#include "renderer/vulkan/swapchain.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/physical_device.hpp"
+#include "vulkan/surface.hpp"
+#include "vulkan/swapchain.hpp"
 
 #include <algorithm>
 #include <cstdint>
@@ -159,7 +159,7 @@ VkImageView createImageView(VkDevice device, VkImage image, VkFormat format) {
 
 }  // namespace
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 Swapchain::Swapchain(const PhysicalDevice& physicalDevice, const Device& device, const Surface& surface, const platform::Window& window)
     : device_(device.nativeHandle()) {
@@ -281,4 +281,4 @@ VkExtent2D Swapchain::extent() const noexcept {
     return extent_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan
