@@ -1,5 +1,6 @@
 #include "gfx/particles/system.hpp"
 
+#include <cmath>
 #include <cstddef>
 #include <iostream>
 #include <stdexcept>
@@ -59,11 +60,14 @@ void ParticleSystem::randomize() {
 }
 
 void ParticleSystem::update(float dt) {
-    constexpr float speed = 2.0F;
+    constexpr float stiffness = 20.0F;
+    constexpr float damping = 3.0F;
 
-    for (Particle& particle : particles_) {
-        const glm::vec2 delta = particle.origin - particle.position;
-        particle.position += delta * speed * dt;
+    for (Particle& p : particles_) {
+        const glm::vec2 displacement = p.origin - p.position;
+        p.velocity += displacement * stiffness * dt;
+        p.velocity *= std::exp(-damping * dt);
+        p.position += p.velocity * dt;
     }
 }
 

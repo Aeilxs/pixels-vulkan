@@ -27,9 +27,9 @@ void App::run() {
     auto previousTime = std::chrono::steady_clock::now();
     while (running_) {
         const auto currentTime = std::chrono::steady_clock::now();
-        const float dt = std::chrono::duration<float>(currentTime - previousTime).count();
+        // Limit dt to avoid large jumps when debugging
+        const float dt = std::min(std::chrono::duration<float>(currentTime - previousTime).count(), 0.05F);
         previousTime = currentTime;
-
         pollEvents();
 
         if (running_) {

@@ -1795,11 +1795,11 @@ Je la structurerais comme ça, avec un ordre qui garde le projet fun **et** fait
   - [x] ~1.9 M particules fluides en implémentation naïve
 
 - [ ] **Milestone 2 — Pixel Storm interactif côté CPU**
-  - [ ] Remplacer le retour simpliste par une vraie simulation
-    - [ ] force de retour vers `origin`
-    - [ ] `velocity`
-    - [ ] damping / friction
-    - [ ] `dt` clamp raisonnable
+  - [x] Remplacer le retour simpliste par une vraie simulation
+    - [x] force de retour vers `origin`
+    - [x] `velocity`
+    - [x] damping / friction
+    - [x] `dt` clamp raisonnable
   - [ ] Répulsion souris
     - [ ] récupérer position souris SDL
     - [ ] `Camera2D::screenToWorld()`
