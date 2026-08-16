@@ -65,15 +65,20 @@ SwapchainSupportDetails querySwapchainSupport(VkPhysicalDevice physicalDevice, V
 
 [[nodiscard("The selected Vulkan surface format must be used")]]
 VkSurfaceFormatKHR chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
-    // Return VK_FORMAT_B8G8R8A8_SRGB with VK_COLOR_SPACE_SRGB_NONLINEAR_KHR if available, otherwise return the first
-    // available format.
-    for (const VkSurfaceFormatKHR& availableFormat : availableFormats) {
-        if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
-            return availableFormat;
+    constexpr VkFormat preferredFormats[] = {
+        VK_FORMAT_B8G8R8A8_SRGB,
+        VK_FORMAT_R8G8B8A8_SRGB,
+    };
+
+    for (const VkFormat preferredFormat : preferredFormats) {
+        for (const VkSurfaceFormatKHR& availableFormat : availableFormats) {
+            if (availableFormat.format == preferredFormat && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
+                return availableFormat;
+            }
         }
     }
 
-    return availableFormats.front();
+    throw std::runtime_error{"No supported sRGB swapchain surface format"};
 }
 
 [[nodiscard("The selected Vulkan present mode must be used")]]
