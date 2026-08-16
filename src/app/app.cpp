@@ -2,6 +2,7 @@
 #include "app/config.hpp"
 
 #include <SDL3/SDL.h>
+#include <chrono>
 
 namespace ps::app {
 App::App(const cli::AppOptions& options)
@@ -23,11 +24,17 @@ App::App(const cli::AppOptions& options)
 }
 
 void App::run() {
+    auto previousTime = std::chrono::steady_clock::now();
     while (running_) {
+        const auto currentTime = std::chrono::steady_clock::now();
+        const float dt = std::chrono::duration<float>(currentTime - previousTime).count();
+        previousTime = currentTime;
+
         pollEvents();
 
         if (running_) {
-            renderer_.drawFrame(camera_.viewProjection());
+            particleSystem_.update(dt);
+            renderer_.drawFrame(camera_.viewProjection(), particleSystem_.particles());
         }
     }
 }
@@ -47,12 +54,16 @@ void App::handleKeyPress(SDL_Keycode keycode) {
     switch (keycode) {
         case SDLK_Q:
         case SDLK_ESCAPE: running_ = false; break;
+
         case SDLK_UP: camera_.setCenter(camera_.center() + glm::vec2{0.0F, -25.0F}); break;
         case SDLK_DOWN: camera_.setCenter(camera_.center() + glm::vec2{0.0F, 25.0F}); break;
         case SDLK_LEFT: camera_.setCenter(camera_.center() + glm::vec2{-25.0F, 0.0F}); break;
         case SDLK_RIGHT: camera_.setCenter(camera_.center() + glm::vec2{25.0F, 0.0F}); break;
+
         case SDLK_K: camera_.setZoom(camera_.zoom() * 1.1F); break;
         case SDLK_J: camera_.setZoom(camera_.zoom() / 1.1F); break;
+
+        case SDLK_R: particleSystem_.randomize(); break;
         default: break;
     }
 }

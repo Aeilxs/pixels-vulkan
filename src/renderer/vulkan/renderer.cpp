@@ -1,7 +1,6 @@
-#include "renderer/vulkan/renderer.hpp"
-
 #include "renderer/vulkan/device.hpp"
 #include "renderer/vulkan/physical_device.hpp"
+#include "renderer/vulkan/renderer.hpp"
 #include "renderer/vulkan/swapchain.hpp"
 
 #include <cstdint>
@@ -12,9 +11,7 @@
 namespace ps::renderer::vulkan {
 namespace {
 
-Buffer createParticleBuffer(
-    const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles
-) {
+Buffer createParticleBuffer(const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles) {
     const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
 
     Buffer buffer{
@@ -33,10 +30,7 @@ Buffer createParticleBuffer(
 }  // namespace
 
 Renderer::Renderer(
-    const PhysicalDevice& physicalDevice,
-    const Device& device,
-    const Swapchain& swapchain,
-    std::span<const ps::gfx::particles::Particle> particles
+    const PhysicalDevice& physicalDevice, const Device& device, const Swapchain& swapchain, std::span<const ps::gfx::particles::Particle> particles
 )
     : device_{device.nativeHandle()},
       graphicsQueue_{device.graphicsQueue()},
@@ -59,13 +53,20 @@ Renderer::~Renderer() {
     }
 }
 
-void Renderer::drawFrame(glm::mat4 const& viewProjection) {
+void Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<const ps::gfx::particles::Particle> particles) {
     const VkFence inFlightFence = synchronization_.inFlightFence();
 
     VkResult result = vkWaitForFences(device_, 1, &inFlightFence, VK_TRUE, std::numeric_limits<std::uint64_t>::max());
     if (result != VK_SUCCESS) {
         throw std::runtime_error{std::string{"Failed to wait for Vulkan in-flight fence: VkResult "} + std::to_string(result)};
     }
+
+    if (particles.size() != particleCount_) {
+        throw std::logic_error{"Particle count changed after particle buffer creation."};
+    }
+
+    const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
+    particleBuffer_.write(particles.data(), bufferSize);
 
     std::uint32_t imageIndex = 0;
     result = vkAcquireNextImageKHR(

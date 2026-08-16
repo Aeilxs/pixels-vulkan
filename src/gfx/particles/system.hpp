@@ -35,6 +35,9 @@ class ParticleSystem {
     [[nodiscard]]
     ImageDimensions imageDimensions() const noexcept;
 
+    void randomize();
+    void update(float dt);
+
    private:
     std::vector<Particle> particles_;
     ImageDimensions imageDimensions_{};

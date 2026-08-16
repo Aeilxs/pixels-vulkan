@@ -1,6 +1,7 @@
 #include "gfx/particles/system.hpp"
 
 #include <cstddef>
+#include <iostream>
 #include <stdexcept>
 #include <utility>
 
@@ -44,7 +45,26 @@ ParticleSystem ParticleSystem::fromImage(const image::Image& image, std::uint32_
     system.particles_ = std::move(particles);
     system.imageDimensions_.width = image.width;
     system.imageDimensions_.height = image.height;
+
+    std::cout << "Particle count: " << system.particles_.size() << " (image dimensions: " << system.imageDimensions_.width << "x"
+              << system.imageDimensions_.height << ", gap: " << gap << ")\n";
     return system;
+}
+
+void ParticleSystem::randomize() {
+    for (Particle& particle : particles_) {
+        particle.position.x = static_cast<float>(std::rand() % imageDimensions_.width);
+        particle.position.y = static_cast<float>(std::rand() % imageDimensions_.height);
+    }
+}
+
+void ParticleSystem::update(float dt) {
+    constexpr float speed = 5.0F;
+
+    for (Particle& particle : particles_) {
+        const glm::vec2 delta = particle.origin - particle.position;
+        particle.position += delta * speed * dt;
+    }
 }
 
 ImageDimensions ParticleSystem::imageDimensions() const noexcept {

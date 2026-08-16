@@ -65,7 +65,7 @@ class Renderer final {
     /// @throws std::runtime_error If a Vulkan operation fails or the swapchain
     /// becomes out of date. Swapchain recreation is intentionally deferred until
     /// the resize lifecycle is implemented.
-    void drawFrame(const glm::mat4& viewProjection);
+    void drawFrame(const glm::mat4& viewProjection, std::span<const ps::gfx::particles::Particle> particles);
 
    private:
     /// @brief Records the graphics commands for the acquired swapchain image.
