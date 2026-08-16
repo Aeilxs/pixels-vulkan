@@ -42,6 +42,11 @@ Device::Device(const PhysicalDevice& physicalDevice) {
     features13.dynamicRendering = VK_TRUE;
     features13.synchronization2 = VK_TRUE;
 
+    VkPhysicalDeviceFeatures2 features{};
+    features.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    features.features.largePoints = VK_TRUE;
+    features.pNext = &features13;
+
     std::vector<const char*> enabledExtensions{
         ps::app::config::requiredVulkanDeviceExtensions.begin(),
         ps::app::config::requiredVulkanDeviceExtensions.end(),
@@ -53,7 +58,8 @@ Device::Device(const PhysicalDevice& physicalDevice) {
 
     VkDeviceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-    createInfo.pNext = &features13;
+    createInfo.pNext = &features;
+    createInfo.pEnabledFeatures = nullptr;  // Features are specified in the pNext chain
     createInfo.queueCreateInfoCount = static_cast<std::uint32_t>(queueCreateInfos.size());
     createInfo.pQueueCreateInfos = queueCreateInfos.data();
     createInfo.enabledExtensionCount = static_cast<std::uint32_t>(enabledExtensions.size());

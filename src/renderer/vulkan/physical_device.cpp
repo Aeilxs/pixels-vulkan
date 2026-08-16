@@ -115,6 +115,7 @@ bool hasAdequateSwapchainSupport(VkPhysicalDevice device, VkSurfaceKHR surface) 
 struct RequiredFeatures {
     bool dynamicRendering = false;
     bool synchronization2 = false;
+    bool largePoints = false;
 };
 
 [[nodiscard]]
@@ -128,7 +129,11 @@ RequiredFeatures queryRequiredFeatures(VkPhysicalDevice device) {
 
     vkGetPhysicalDeviceFeatures2(device, &features);
 
-    return RequiredFeatures{.dynamicRendering = features13.dynamicRendering == VK_TRUE, .synchronization2 = features13.synchronization2 == VK_TRUE};
+    return RequiredFeatures{
+        .dynamicRendering = features13.dynamicRendering == VK_TRUE,
+        .synchronization2 = features13.synchronization2 == VK_TRUE,
+        .largePoints = features.features.largePoints == VK_TRUE,
+    };
 }
 
 [[nodiscard]]
@@ -149,7 +154,7 @@ struct DeviceEvaluation {
     [[nodiscard]]
     bool suitable() const noexcept {
         return supportsApiVersion && queueFamilies.complete() && supportsExtensions && hasAdequateSwapchain && requiredFeatures.dynamicRendering &&
-               requiredFeatures.synchronization2;
+               requiredFeatures.synchronization2 && requiredFeatures.largePoints;
     }
 };
 
