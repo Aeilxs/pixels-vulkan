@@ -1,8 +1,8 @@
-#include "app/config.hpp"
-#include "renderer/vulkan/instance.hpp"
-#include "renderer/vulkan/physical_device.hpp"
-#include "renderer/vulkan/queue_family_indices.hpp"
-#include "renderer/vulkan/surface.hpp"
+#include "vulkan/config.hpp"
+#include "vulkan/instance.hpp"
+#include "vulkan/physical_device.hpp"
+#include "vulkan/queue_family_indices.hpp"
+#include "vulkan/surface.hpp"
 
 #include <cstdint>
 #include <stdexcept>
@@ -10,10 +10,8 @@
 #include <string_view>
 #include <vector>
 
-namespace config = ps::app::config;
-
 namespace {
-using ps::renderer::vulkan::QueueFamilyIndices;
+using ps::vulkan::QueueFamilyIndices;
 
 [[nodiscard]]
 QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device, VkSurfaceKHR surface) {
@@ -73,7 +71,7 @@ bool supportsRequiredExtensions(VkPhysicalDevice device) {
         throw std::runtime_error{std::string{"Failed to enumerate Vulkan device extensions: VkResult "} + std::to_string(result)};
     }
 
-    for (const char* requiredExtension : config::requiredVulkanDeviceExtensions) {
+    for (const char* requiredExtension : ps::vulkan::config::requiredVulkanDeviceExtensions) {
         bool extensionFound = false;
 
         for (const VkExtensionProperties& availableExtension : availableExtensions) {
@@ -141,7 +139,7 @@ bool supportsRequiredApiVersion(VkPhysicalDevice device) {
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(device, &properties);
 
-    return properties.apiVersion >= config::requiredVulkanApiVersion;
+    return properties.apiVersion >= ps::vulkan::config::requiredVulkanApiVersion;
 }
 
 struct DeviceEvaluation {
@@ -189,7 +187,7 @@ DeviceEvaluation evaluateDevice(VkPhysicalDevice device, VkSurfaceKHR surface) {
 
 }  // namespace
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 PhysicalDevice::PhysicalDevice(const Instance& instance, const Surface& surface) {
     std::uint32_t deviceCount = 0;
@@ -244,4 +242,4 @@ VkPhysicalDevice PhysicalDevice::nativeHandle() const {
     return handle_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

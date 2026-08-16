@@ -1,5 +1,5 @@
-#include "app/config.hpp"
-#include "renderer/vulkan/instance.hpp"
+#include "vulkan/config.hpp"
+#include "vulkan/instance.hpp"
 
 #include <SDL3/SDL_vulkan.h>
 #include <cstdint>
@@ -7,9 +7,7 @@
 #include <string>
 #include <vector>
 
-namespace config = ps::app::config;
-
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 Instance::Instance() {
     std::uint32_t extensionCount = 0;
@@ -59,4 +57,4 @@ VkInstance Instance::nativeHandle() const {
     return handle_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

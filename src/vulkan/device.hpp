@@ -2,7 +2,7 @@
 
 #include <vulkan/vulkan.h>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 class PhysicalDevice;
 
@@ -17,13 +17,8 @@ class PhysicalDevice;
 /// Vulkan instance, as required by Vulkan.
 class Device final {
    public:
-    /// @brief Creates the logical device for the selected physical device.
-    /// @param physicalDevice Selected device providing queue families, features
-    ///        and extensions.
-    /// @throws std::runtime_error If Vulkan cannot create the logical device.
     explicit Device(const PhysicalDevice& physicalDevice);
 
-    /// @brief Destroys the owned Vulkan logical device.
     ~Device();
 
     Device(const Device&) = delete;
@@ -31,19 +26,12 @@ class Device final {
     Device(Device&&) = delete;
     Device& operator=(Device&&) = delete;
 
-    /// @brief Returns the graphics queue created with the logical device.
-    /// @return Non-owning queue handle managed by the logical device.
     [[nodiscard("The Vulkan graphics queue handle must be used")]]
     VkQueue graphicsQueue() const noexcept;
 
-    /// @brief Returns the queue used to present swapchain images.
-    /// @return Non-owning queue handle managed by the logical device.
     [[nodiscard("The Vulkan presentation queue handle must be used")]]
     VkQueue presentQueue() const noexcept;
 
-    /// @brief Returns the native Vulkan logical-device handle without
-    ///        transferring ownership.
-    /// @return The owned logical-device handle, valid for this object's lifetime.
     [[nodiscard("The Vulkan logical device handle must be used")]]
     VkDevice nativeHandle() const noexcept;
 
@@ -53,4 +41,4 @@ class Device final {
     VkQueue presentQueue_{VK_NULL_HANDLE};
 };
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

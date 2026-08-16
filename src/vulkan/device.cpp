@@ -1,13 +1,13 @@
-#include "app/config.hpp"
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/physical_device.hpp"
+#include "vulkan/config.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/physical_device.hpp"
 
 #include <cstdint>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 Device::Device(const PhysicalDevice& physicalDevice) {
     const QueueFamilyIndices& queueFamilies = physicalDevice.queueFamilies();
@@ -48,8 +48,8 @@ Device::Device(const PhysicalDevice& physicalDevice) {
     features.pNext = &features13;
 
     std::vector<const char*> enabledExtensions{
-        ps::app::config::requiredVulkanDeviceExtensions.begin(),
-        ps::app::config::requiredVulkanDeviceExtensions.end(),
+        config::requiredVulkanDeviceExtensions.begin(),
+        config::requiredVulkanDeviceExtensions.end(),
     };
 
 #ifdef __APPLE__
@@ -92,4 +92,4 @@ Device::~Device() {
     }
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

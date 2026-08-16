@@ -1,14 +1,14 @@
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/physical_device.hpp"
-#include "renderer/vulkan/renderer.hpp"
-#include "renderer/vulkan/swapchain.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/physical_device.hpp"
+#include "vulkan/renderer.hpp"
+#include "vulkan/swapchain.hpp"
 
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
 #include <string>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 namespace {
 
 Buffer createParticleBuffer(const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles) {
@@ -268,4 +268,4 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     }
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

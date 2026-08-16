@@ -1,13 +1,13 @@
-#include "renderer/vulkan/command_pool.hpp"
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/physical_device.hpp"
-#include "renderer/vulkan/queue_family_indices.hpp"
+#include "vulkan/command_pool.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/physical_device.hpp"
+#include "vulkan/queue_family_indices.hpp"
 
 #include <cstdint>
 #include <stdexcept>
 #include <string>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 
 CommandPool::CommandPool(const PhysicalDevice& physicalDevice, const Device& device) : device_{device.nativeHandle()} {
     const QueueFamilyIndices& queueFamilies = physicalDevice.queueFamilies();
@@ -34,4 +34,4 @@ VkCommandPool CommandPool::nativeHandle() const noexcept {
     return handle_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

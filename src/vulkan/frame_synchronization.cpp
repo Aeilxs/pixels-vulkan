@@ -1,11 +1,11 @@
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/frame_synchronization.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/frame_synchronization.hpp"
 
 #include <cstddef>
 #include <stdexcept>
 #include <string>
 
-namespace ps::renderer::vulkan {
+namespace ps::vulkan {
 namespace {
 
 [[nodiscard("The created Vulkan semaphore must be used")]]
@@ -91,4 +91,4 @@ VkFence FrameSynchronization::inFlightFence() const noexcept {
     return inFlightFence_;
 }
 
-}  // namespace ps::renderer::vulkan
+}  // namespace ps::vulkan

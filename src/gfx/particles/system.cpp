@@ -2,9 +2,9 @@
 
 #include <cmath>
 #include <cstddef>
+#include <random>
 #define GLM_ENABLE_EXPERIMENTAL
 #include <glm/gtx/norm.hpp>
-#include <iostream>
 #include <stdexcept>
 #include <utility>
 
@@ -44,29 +44,34 @@ ParticleSystem ParticleSystem::fromImage(const image::Image& image, std::uint32_
         }
     }
 
+    if (particles.empty()) {
+        throw std::runtime_error{"No particles generated from image; check the gap and image alpha channel."};
+    }
+
     ParticleSystem system{};
-    system.particles_ = std::move(particles);
     system.imageDimensions_.width = image.width;
     system.imageDimensions_.height = image.height;
-
-    std::cout << "Particle count: " << system.particles_.size() << " (image dimensions: " << system.imageDimensions_.width << "x"
-              << system.imageDimensions_.height << ", gap: " << gap << ")\n";
+    system.particles_ = std::move(particles);
     return system;
 }
 
 void ParticleSystem::randomize() {
+    std::uniform_real_distribution<float> xDistribution{0.0F, static_cast<float>(imageDimensions_.width)};
+    std::uniform_real_distribution<float> yDistribution{0.0F, static_cast<float>(imageDimensions_.height)};
+
     for (Particle& particle : particles_) {
-        particle.position.x = static_cast<float>(std::rand() % imageDimensions_.width);
-        particle.position.y = static_cast<float>(std::rand() % imageDimensions_.height);
+        particle.position.x = xDistribution(randomEngine_);
+        particle.position.y = yDistribution(randomEngine_);
+        particle.velocity = {};
     }
 }
 
 void ParticleSystem::update(float dt, const glm::vec2& mousePosition) {
-    constexpr float stiffness = 20.0F;
+    constexpr float stiffness = 30.0F;
     constexpr float damping = 3.0F;
 
-    constexpr float radius = 400.0F;
-    constexpr float repulsion = 5000.0F;
+    constexpr float radius = 800.0F;
+    constexpr float repulsion = 8000.0F;
     constexpr float minDistance2 = 0.0001F;
 
     const float radius2 = radius * radius;

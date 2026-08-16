@@ -7,6 +7,7 @@
 namespace cli = ps::app::cli;
 using ps::app::App;
 
+namespace {
 int run(int argc, char* argv[]) {
     const cli::AppOptions options = cli::parse(argc, argv);
     if (options.help) {
@@ -19,6 +20,7 @@ int run(int argc, char* argv[]) {
 
     return 0;
 }
+}  // namespace
 
 int main(int argc, char* argv[]) {
     try {
