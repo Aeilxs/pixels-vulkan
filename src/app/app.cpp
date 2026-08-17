@@ -1,6 +1,5 @@
 #include "app/app.hpp"
 #include "app/config.hpp"
-#include "log/log.hpp"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
