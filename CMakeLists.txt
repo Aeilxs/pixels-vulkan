@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.28)
 project(
     Pixel_Storm
     VERSION 0.1.0
-    LANGUAGES CXX
+    LANGUAGES C CXX
 )
 
 #
@@ -80,6 +80,8 @@ add_executable(
     src/vulkan/renderer.cpp
     src/vulkan/surface.cpp
     src/vulkan/swapchain.cpp
+
+    vendor/log/log.c
 )
 
 add_dependencies(Pixel_Storm Pixel_StormShaders)
@@ -88,19 +90,31 @@ target_include_directories(
     Pixel_Storm
     SYSTEM PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/vendor/stb"
+        "${CMAKE_CURRENT_SOURCE_DIR}/vendor/log"
     PRIVATE
         "${CMAKE_CURRENT_SOURCE_DIR}/src"
+)
+
+target_compile_options(
+    Pixel_Storm
+    PRIVATE
+        # Keep __FILE__ paths relative to the project root.
+        "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/="
+        -Wall
+        -Wextra
+        -Wpedantic
 )
 
 target_compile_definitions(
     Pixel_Storm
     PRIVATE
         PIXEL_STORM_SHADER_DIR="${PIXEL_STORM_SHADER_OUTPUT_DIR}"
+        LOG_USE_COLOR
 )
 
 target_compile_features(
     Pixel_Storm
-    PRIVATE cxx_std_23
+    PRIVATE cxx_std_23 c_std_99
 )
 
 target_link_libraries(
