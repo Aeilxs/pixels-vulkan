@@ -1,6 +1,6 @@
 #include "app/app.hpp"
 #include "app/config.hpp"
-#include "core/log.hpp"
+#include "log/log.hpp"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -36,7 +36,6 @@ App::App(const cli::AppOptions& options)
     };
 
     camera_.fit(contentSize * 0.5F, contentSize, 0.95F);
-    log_info("Initial camera center: (%.2f, %.2f), zoom: %.2f", camera_.center().x, camera_.center().y, camera_.zoom());
 }
 
 void App::run() {
