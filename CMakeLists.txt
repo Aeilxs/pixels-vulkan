@@ -7,6 +7,17 @@ project(
 )
 
 #
+# Dependencies
+#
+# - Vulkan SDK: https://vulkan.lunarg.com/sdk/home
+# - SDL3: https://www.libsdl.org/
+# - GLM: https://github.com/g-truc/glm
+# - STBI: https://github.com/nothings/stb (stb_image.h)
+# - Log: Rxi's log library: https://github.com/rxi/log.c
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+#
 # Packages
 #
 
@@ -102,14 +113,38 @@ target_compile_options(
         "-ffile-prefix-map=${CMAKE_CURRENT_SOURCE_DIR}/="
         -Wall
         -Wextra
-        -Wpedantic
+        -Werror
 )
+
+# Debug
+#   logs        DEBUG
+#   validation ON
+#   assertions ON
+# 
+# RelWithDebInfo
+#   logs        INFO
+#   validation OFF
+#   optimisation + symboles
+#   assertions OFF
+# 
+# Release
+#   logs        WARN
+#   validation OFF
+#   optimisation
+#   assertions OFF
 
 target_compile_definitions(
     Pixel_Storm
     PRIVATE
         PIXEL_STORM_SHADER_DIR="${PIXEL_STORM_SHADER_OUTPUT_DIR}"
         LOG_USE_COLOR
+
+        $<$<CONFIG:Debug>:APPLICATION_LOG_LEVEL=LOG_DEBUG>
+        $<$<CONFIG:Debug>:ENABLE_VULKAN_VALIDATION>
+
+        $<$<CONFIG:Release>:APPLICATION_LOG_LEVEL=LOG_WARN>
+        $<$<CONFIG:RelWithDebInfo>:APPLICATION_LOG_LEVEL=LOG_INFO>
+        $<$<CONFIG:MinSizeRel>:APPLICATION_LOG_LEVEL=LOG_WARN>
 )
 
 target_compile_features(
@@ -129,3 +164,5 @@ set_target_properties(
     Pixel_Storm
     PROPERTIES CXX_EXTENSIONS OFF
 )
+
+include(cmake/build_info.cmake)
