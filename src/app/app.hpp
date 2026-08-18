@@ -5,6 +5,7 @@
 #include "gfx/particles/system.hpp"
 #include "platform/sdl_context.hpp"
 #include "platform/window.hpp"
+#include "vulkan/debug_messenger.hpp"
 #include "vulkan/device.hpp"
 #include "vulkan/instance.hpp"
 #include "vulkan/physical_device.hpp"
@@ -35,6 +36,7 @@ class App {
     ps::gfx::Camera2D camera_;
 
     ps::vulkan::Instance vulkanInstance_;
+    ps::vulkan::DebugMessenger vulkanDebugMessenger_;
     ps::vulkan::Surface vulkanSurface_;
     ps::vulkan::PhysicalDevice physicalDevice_;
     ps::vulkan::Device device_;

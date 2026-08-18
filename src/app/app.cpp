@@ -24,6 +24,7 @@ App::App(const cli::AppOptions& options)
       window_{config::windowName, config::initialWindowWidth, config::initialWindowHeight},
       camera_{windowLogicalSize(window_), 1.0F},
       vulkanInstance_{},
+      vulkanDebugMessenger_{vulkanInstance_},
       vulkanSurface_{vulkanInstance_, window_},
       physicalDevice_{vulkanInstance_, vulkanSurface_},
       device_{physicalDevice_},

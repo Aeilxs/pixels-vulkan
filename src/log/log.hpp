@@ -16,6 +16,24 @@ extern "C" {
 #undef log_fatal
 
 namespace ps::log {
+namespace color {
+
+#if defined(LOG_USE_COLOR)
+inline constexpr char reset[] = "\x1b[0m";
+inline constexpr char gray[] = "\x1b[90m";
+inline constexpr char cyan[] = "\x1b[36m";
+inline constexpr char yellow[] = "\x1b[33m";
+inline constexpr char magenta[] = "\x1b[35m";
+#else
+inline constexpr char reset[] = "";
+inline constexpr char gray[] = "";
+inline constexpr char cyan[] = "";
+inline constexpr char yellow[] = "";
+inline constexpr char magenta[] = "";
+#endif
+
+}  // namespace color
+
 // Avoid anonymous namespace in a header: each translation unit
 // including this file would get its own distinct write() function.
 namespace detail {

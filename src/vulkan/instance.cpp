@@ -1,5 +1,5 @@
-#include "log/log.hpp"
 #include "vulkan/config.hpp"
+#include "vulkan/debug_messenger.hpp"
 #include "vulkan/instance.hpp"
 
 #include <SDL3/SDL_vulkan.h>
@@ -57,6 +57,10 @@ Instance::Instance() {
     }
 
     std::vector<const char*> extensions{sdlExtensions, sdlExtensions + extensionCount};
+    if (config::enableVulkanValidation) {
+        extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+    }
+
     VkInstanceCreateFlags flags = 0;
 
 #ifdef __APPLE__
@@ -79,9 +83,13 @@ Instance::Instance() {
     createInfo.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 
+    VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
     if (config::enableVulkanValidation) {
         createInfo.enabledLayerCount = static_cast<std::uint32_t>(config::requiredVulkanValidationLayers.size());
         createInfo.ppEnabledLayerNames = config::requiredVulkanValidationLayers.data();
+
+        debugCreateInfo = makeDebugMessengerCreateInfo();
+        createInfo.pNext = &debugCreateInfo;
     }
 
     const VkResult result = vkCreateInstance(&createInfo, nullptr, &handle_);

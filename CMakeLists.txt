@@ -84,6 +84,7 @@ add_executable(
     src/vulkan/buffer.cpp
     src/vulkan/command_buffer.cpp
     src/vulkan/command_pool.cpp
+    src/vulkan/debug_messenger.cpp
     src/vulkan/device.cpp
     src/vulkan/frame_synchronization.cpp
     src/vulkan/graphics_pipeline.cpp
