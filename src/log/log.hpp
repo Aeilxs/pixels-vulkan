@@ -34,6 +34,10 @@ void write(int level, Message message, Args&&... args) {
 }
 }  // namespace detail
 
+inline void init() {
+    ::log_set_level(APPLICATION_LOG_LEVEL);
+}
+
 template <typename... Args>
 void trace(detail::Message message, Args&&... args) {
     detail::write(LOG_TRACE, message, std::forward<Args>(args)...);

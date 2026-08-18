@@ -1,10 +1,14 @@
 #include "app/app.hpp"
 #include "app/cli.hpp"
+#include "build/build_info.hpp"
+#include "log/log.hpp"
 
 #include <exception>
 #include <iostream>
 
+namespace build = ps::build;
 namespace cli = ps::app::cli;
+namespace log = ps::log;
 using ps::app::App;
 
 namespace {
@@ -14,6 +18,18 @@ int run(int argc, char* argv[]) {
         cli::usage(argv[0], std::cout);
         return 0;
     }
+
+    log::init();
+    log::info(
+        "%s v%s [%s]\nBranch: %s\nCommit: @%s%s\nCompiler: %s",
+        build::name,
+        build::version,
+        build::configuration,
+        build::gitBranch,
+        build::gitHash,
+        build::gitDirty ? " (dirty)" : "",
+        build::compiler
+    );
 
     App app{options};
     app.run();
