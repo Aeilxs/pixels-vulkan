@@ -114,6 +114,7 @@ struct RequiredFeatures {
     bool dynamicRendering = false;
     bool synchronization2 = false;
     bool largePoints = false;
+    bool shaderDemoteToHelperInvocation = false;
 };
 
 [[nodiscard]]
@@ -131,6 +132,7 @@ RequiredFeatures queryRequiredFeatures(VkPhysicalDevice device) {
         .dynamicRendering = features13.dynamicRendering == VK_TRUE,
         .synchronization2 = features13.synchronization2 == VK_TRUE,
         .largePoints = features.features.largePoints == VK_TRUE,
+        .shaderDemoteToHelperInvocation = features13.shaderDemoteToHelperInvocation == VK_TRUE,
     };
 }
 
@@ -150,10 +152,18 @@ struct DeviceEvaluation {
     RequiredFeatures requiredFeatures;
 
     [[nodiscard]]
+    // clang-format off
     bool suitable() const noexcept {
-        return supportsApiVersion && queueFamilies.complete() && supportsExtensions && hasAdequateSwapchain && requiredFeatures.dynamicRendering &&
-               requiredFeatures.synchronization2 && requiredFeatures.largePoints;
+        return supportsApiVersion                            && 
+            queueFamilies.complete()                         && 
+            supportsExtensions                               &&
+            hasAdequateSwapchain                             &&
+            requiredFeatures.dynamicRendering                &&
+            requiredFeatures.synchronization2                &&
+            requiredFeatures.largePoints                     &&
+            requiredFeatures.shaderDemoteToHelperInvocation;
     }
+    // clang-format on
 };
 
 [[nodiscard]]
