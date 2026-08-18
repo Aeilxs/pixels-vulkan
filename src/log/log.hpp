@@ -34,8 +34,12 @@ void write(int level, Message message, Args&&... args) {
 }
 }  // namespace detail
 
-inline void init() {
+inline void initialize() noexcept {
     ::log_set_level(APPLICATION_LOG_LEVEL);
+}
+
+inline const char* configuredLevelName() noexcept {
+    return ::log_level_string(APPLICATION_LOG_LEVEL);
 }
 
 template <typename... Args>

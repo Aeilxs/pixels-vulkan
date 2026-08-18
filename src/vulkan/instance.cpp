@@ -1,3 +1,4 @@
+#include "log/log.hpp"
 #include "vulkan/config.hpp"
 #include "vulkan/instance.hpp"
 
@@ -5,13 +6,50 @@
 #include <cstdint>
 #include <stdexcept>
 #include <string>
+#include <string_view>
 #include <vector>
 
 namespace ps::vulkan {
+namespace {
+
+bool validationLayersAvailable() {
+    std::uint32_t layerCount = 0;
+    VkResult result = vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error{"Failed to enumerate Vulkan instance layers: VkResult " + std::to_string(result)};
+    }
+
+    std::vector<VkLayerProperties> availableLayers(layerCount);
+    result = vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+    if (result != VK_SUCCESS) {
+        throw std::runtime_error{"Failed to enumerate Vulkan instance layers: VkResult " + std::to_string(result)};
+    }
+
+    for (const char* requiredLayer : ps::vulkan::config::requiredVulkanValidationLayers) {
+        bool found = false;
+
+        for (const VkLayerProperties& availableLayer : availableLayers) {
+            if (std::string_view{availableLayer.layerName} == requiredLayer) {
+                found = true;
+                break;
+            }
+        }
+        if (!found) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+}  // namespace
 
 Instance::Instance() {
-    std::uint32_t extensionCount = 0;
+    if (config::enableVulkanValidation && !validationLayersAvailable()) {
+        throw std::runtime_error{"Required Vulkan validation layers are not available"};
+    }
 
+    std::uint32_t extensionCount = 0;
     const char* const* sdlExtensions = SDL_Vulkan_GetInstanceExtensions(&extensionCount);
 
     if (sdlExtensions == nullptr) {
@@ -40,6 +78,11 @@ Instance::Instance() {
     createInfo.pApplicationInfo = &applicationInfo;
     createInfo.enabledExtensionCount = static_cast<std::uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
+
+    if (config::enableVulkanValidation) {
+        createInfo.enabledLayerCount = static_cast<std::uint32_t>(config::requiredVulkanValidationLayers.size());
+        createInfo.ppEnabledLayerNames = config::requiredVulkanValidationLayers.data();
+    }
 
     const VkResult result = vkCreateInstance(&createInfo, nullptr, &handle_);
     if (result != VK_SUCCESS) {

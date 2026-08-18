@@ -1,13 +1,13 @@
 #include "app/app.hpp"
 #include "app/cli.hpp"
-#include "build/build_info.hpp"
+#include "app/diagnostics.hpp"
 #include "log/log.hpp"
 
 #include <exception>
 #include <iostream>
 
-namespace build = ps::build;
 namespace cli = ps::app::cli;
+namespace diagnostics = ps::app::diagnostics;
 namespace log = ps::log;
 using ps::app::App;
 
@@ -19,17 +19,8 @@ int run(int argc, char* argv[]) {
         return 0;
     }
 
-    log::init();
-    log::info(
-        "%s v%s [%s]\nBranch: %s\nCommit: @%s%s\nCompiler: %s",
-        build::name,
-        build::version,
-        build::configuration,
-        build::gitBranch,
-        build::gitHash,
-        build::gitDirty ? " (dirty)" : "",
-        build::compiler
-    );
+    log::initialize();
+    diagnostics::logStartup(options);
 
     App app{options};
     app.run();
@@ -43,10 +34,10 @@ int main(int argc, char* argv[]) {
         return run(argc, argv);
     } catch (const cli::Error& exception) {
         cli::usage(argv[0], std::cerr);
-        std::cerr << exception.what() << '\n';
+        ps::log::fatal("CLI Error: %s", exception.what());
         return 1;
     } catch (const std::exception& exception) {
-        std::cerr << exception.what() << '\n';
+        ps::log::fatal("Error: %s", exception.what());
         return 1;
     }
 }

@@ -71,6 +71,7 @@ add_executable(
 
     src/app/app.cpp
     src/app/cli.cpp
+    src/app/diagnostics.cpp
 
     src/gfx/camera/camera_2d.cpp
     src/gfx/particles/system.cpp
@@ -139,7 +140,7 @@ target_compile_definitions(
         PIXEL_STORM_SHADER_DIR="${PIXEL_STORM_SHADER_OUTPUT_DIR}"
         LOG_USE_COLOR
 
-        $<$<CONFIG:Debug>:APPLICATION_LOG_LEVEL=LOG_DEBUG>
+        $<$<CONFIG:Debug>:APPLICATION_LOG_LEVEL=LOG_TRACE>
         $<$<CONFIG:Debug>:ENABLE_VULKAN_VALIDATION>
 
         $<$<CONFIG:Release>:APPLICATION_LOG_LEVEL=LOG_WARN>
