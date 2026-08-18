@@ -1,0 +1,13 @@
+#pragma once
+
+namespace ps::build {
+
+inline constexpr char name[] = "@BUILD_PROJECT_NAME@";
+inline constexpr char version[] = "@BUILD_PROJECT_VERSION@";
+inline constexpr char configuration[] = "@BUILD_CONFIGURATION@";
+inline constexpr char compiler[] = "@BUILD_COMPILER@";
+inline constexpr char gitBranch[] = "@BUILD_GIT_BRANCH@";
+inline constexpr char gitHash[] = "@BUILD_GIT_HASH@";
+inline constexpr bool gitDirty = @BUILD_GIT_DIRTY@;
+
+}  // namespace ps::build

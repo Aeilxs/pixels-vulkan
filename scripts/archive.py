@@ -67,6 +67,7 @@ SHADER_SUFFIXES = {
 TEXT_SUFFIXES = SOURCE_SUFFIXES | SHADER_SUFFIXES | {
     ".bat",
     ".cmake",
+    ".in",
     ".json",
     ".md",
     ".ps1",
