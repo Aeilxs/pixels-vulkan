@@ -3,6 +3,8 @@
 #include "build/build_info.hpp"
 #include "log/log.hpp"
 #include "vulkan/config.hpp"
+#include "vulkan/physical_device.hpp"
+#include "vulkan/swapchain.hpp"
 
 #include <ostream>
 #include <sstream>
@@ -29,6 +31,14 @@ void appendApplicationConfiguration(std::ostream& output, const cli::AppOptions&
            << "Window title: " << config::windowName << '\n'
            << "Initial window size: " << config::initialWindowWidth << 'x' << config::initialWindowHeight << '\n'
            << "Log level: " << ps::log::configuredLevelName() << '\n';
+}
+
+const char* presentModeName(VkPresentModeKHR presentMode) noexcept {
+    switch (presentMode) {
+        case VK_PRESENT_MODE_MAILBOX_KHR: return "VK_PRESENT_MODE_MAILBOX_KHR";
+        case VK_PRESENT_MODE_FIFO_KHR: return "VK_PRESENT_MODE_FIFO_KHR";
+        default: return "unknown";
+    }
 }
 
 void appendVulkanConfiguration(std::ostream& output) {
@@ -76,6 +86,23 @@ void logStartup(const cli::AppOptions& options) {
     appendVulkanConfiguration(output);
 
     output << '\n';
+
+    ps::log::info("%s", output.str().c_str());
+}
+
+void logVulkanRuntime(const ps::vulkan::PhysicalDevice& physicalDevice, const ps::vulkan::Swapchain& swapchain) {
+    VkPhysicalDeviceProperties properties{};
+    vkGetPhysicalDeviceProperties(physicalDevice.nativeHandle(), &properties);
+
+    const VkExtent2D extent = swapchain.extent();
+
+    std::ostringstream output;
+    output << "\n\nRuntime Vulkan\n"
+           << "--------------\n"
+           << "Physical device: " << properties.deviceName << '\n'
+           << "Swapchain extent: " << extent.width << 'x' << extent.height << '\n'
+           << "Swapchain images: " << swapchain.images().size() << '\n'
+           << "Present mode: " << presentModeName(swapchain.presentMode()) << '\n';
 
     ps::log::info("%s", output.str().c_str());
 }

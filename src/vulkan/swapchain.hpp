@@ -48,6 +48,9 @@ class Swapchain final {
     [[nodiscard("The Vulkan swapchain extent must be used")]]
     VkExtent2D extent() const noexcept;
 
+    [[nodiscard("The Vulkan swapchain present mode must be used")]]
+    VkPresentModeKHR presentMode() const noexcept;
+
    private:
     VkDevice device_{VK_NULL_HANDLE};
     VkSwapchainKHR handle_{VK_NULL_HANDLE};
@@ -57,6 +60,7 @@ class Swapchain final {
 
     VkFormat imageFormat_{VK_FORMAT_UNDEFINED};
     VkExtent2D extent_{};
+    VkPresentModeKHR presentMode_{VK_PRESENT_MODE_FIFO_KHR};
 };
 
 }  // namespace ps::vulkan

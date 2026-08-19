@@ -222,6 +222,7 @@ Swapchain::Swapchain(const PhysicalDevice& physicalDevice, const Device& device,
 
     imageFormat_ = surfaceFormat.format;
     extent_ = extent;
+    presentMode_ = presentMode;
 
     try {
         std::uint32_t actualImageCount = 0;
@@ -284,6 +285,10 @@ VkFormat Swapchain::imageFormat() const noexcept {
 
 VkExtent2D Swapchain::extent() const noexcept {
     return extent_;
+}
+
+VkPresentModeKHR Swapchain::presentMode() const noexcept {
+    return presentMode_;
 }
 
 }  // namespace ps::vulkan

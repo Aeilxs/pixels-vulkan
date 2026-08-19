@@ -1,5 +1,6 @@
 #include "app/app.hpp"
 #include "app/config.hpp"
+#include "app/diagnostics.hpp"
 #include "log/log.hpp"
 
 #include <SDL3/SDL.h>
@@ -35,6 +36,8 @@ App::App(const cli::AppOptions& options)
         static_cast<float>(particleSystem_.imageDimensions().width),
         static_cast<float>(particleSystem_.imageDimensions().height),
     };
+
+    diagnostics::logVulkanRuntime(physicalDevice_, swapchain_);
 
     ps::log::trace("Run with image: %s, gap: %d", options.image_path.string().c_str(), options.gap);
     ps::log::trace("Particle system content size: %.1f x %.1f", contentSize.x, contentSize.y);
