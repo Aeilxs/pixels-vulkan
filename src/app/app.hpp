@@ -1,6 +1,7 @@
 #pragma once
 
 #include "app/cli.hpp"
+#include "app/frame_stats.hpp"
 #include "gfx/camera/camera_2d.hpp"
 #include "gfx/particles/system.hpp"
 #include "platform/sdl_context.hpp"
@@ -42,6 +43,8 @@ class App {
     ps::vulkan::Device device_;
     ps::vulkan::Swapchain swapchain_;
     ps::vulkan::Renderer renderer_;
+
+    FrameStats frameStats_;
 
     glm::vec2 mousePosition_{0.0F, 0.0F};
 

@@ -3,6 +3,7 @@
 #include "vulkan/renderer.hpp"
 #include "vulkan/swapchain.hpp"
 
+#include <chrono>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
@@ -53,20 +54,26 @@ Renderer::~Renderer() {
     }
 }
 
-void Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<const ps::gfx::particles::Particle> particles) {
+FrameTimings Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<const ps::gfx::particles::Particle> particles) {
+    FrameTimings timings{};
     const VkFence inFlightFence = synchronization_.inFlightFence();
 
+    const auto fenceWaitStart = std::chrono::steady_clock::now();
     VkResult result = vkWaitForFences(device_, 1, &inFlightFence, VK_TRUE, std::numeric_limits<std::uint64_t>::max());
     if (result != VK_SUCCESS) {
         throw std::runtime_error{std::string{"Failed to wait for Vulkan in-flight fence: VkResult "} + std::to_string(result)};
     }
+    timings.fenceWaitTime = std::chrono::steady_clock::now() - fenceWaitStart;
 
     if (particles.size() != particleCount_) {
         throw std::logic_error{"Particle count changed after particle buffer creation."};
     }
 
     const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
+
+    const auto uploadStart = std::chrono::steady_clock::now();
     particleBuffer_.write(particles.data(), bufferSize);
+    timings.particleUploadTime = std::chrono::steady_clock::now() - uploadStart;
 
     std::uint32_t imageIndex = 0;
     result = vkAcquireNextImageKHR(
@@ -143,6 +150,8 @@ void Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<const ps::gf
     if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
         throw std::runtime_error{std::string{"Failed to present Vulkan swapchain image: VkResult "} + std::to_string(result)};
     }
+
+    return timings;
 }
 
 void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& viewProjection) {

@@ -7,6 +7,7 @@
 #include "vulkan/frame_synchronization.hpp"
 #include "vulkan/graphics_pipeline.hpp"
 
+#include <chrono>
 #include <cstdint>
 #include <glm/mat4x4.hpp>
 #include <span>
@@ -17,6 +18,11 @@ namespace ps::vulkan {
 class Device;
 class PhysicalDevice;
 class Swapchain;
+
+struct FrameTimings {
+    std::chrono::steady_clock::duration particleUploadTime{};
+    std::chrono::steady_clock::duration fenceWaitTime{};
+};
 
 /// @brief Coordinates Vulkan resources and commands required to render one frame.
 ///
@@ -50,7 +56,8 @@ class Renderer final {
 
     // Swapchain recreation is intentionally deferred; OUT_OF_DATE/SUBOPTIMAL
     // are reported as errors until the resize lifecycle is implemented.
-    void drawFrame(const glm::mat4& viewProjection, std::span<const ps::gfx::particles::Particle> particles);
+    [[nodiscard]]
+    FrameTimings drawFrame(const glm::mat4& viewProjection, std::span<const ps::gfx::particles::Particle> particles);
 
    private:
     void recordCommandBuffer(std::uint32_t imageIndex, const glm::mat4& viewProjection);

@@ -1,5 +1,6 @@
 #include "app/app.hpp"
 #include "app/config.hpp"
+#include "log/log.hpp"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -35,20 +36,49 @@ App::App(const cli::AppOptions& options)
         static_cast<float>(particleSystem_.imageDimensions().height),
     };
 
+    ps::log::trace("Run with image: %s, gap: %d", options.image_path.string().c_str(), options.gap);
+    ps::log::trace("Particle system content size: %.1f x %.1f", contentSize.x, contentSize.y);
+    ps::log::trace("Particle system particle count: %zu", particleSystem_.particles().size());
+
     camera_.fit(contentSize * 0.5F, contentSize, 0.95F);
 }
 
 void App::run() {
     auto previousTime = std::chrono::steady_clock::now();
+
     while (running_) {
-        const auto currentTime = std::chrono::steady_clock::now();
-        // Limit dt to avoid large jumps when debugging.
-        const float dt = std::min(std::chrono::duration<float>(currentTime - previousTime).count(), 0.05F);
-        previousTime = currentTime;
+        const auto frameWallStartTime = std::chrono::steady_clock::now();
+
+        const float dt = std::min(std::chrono::duration<float>(frameWallStartTime - previousTime).count(), 0.05F);
+        previousTime = frameWallStartTime;
+
         pollEvents();
-        if (running_) {
-            particleSystem_.update(dt, camera_.screenToWorld(mousePosition_));
-            renderer_.drawFrame(camera_.viewProjection(), particleSystem_.particles());
+        if (!running_) {
+            break;
+        }
+
+        const auto simulationStartTime = std::chrono::steady_clock::now();
+        particleSystem_.update(dt, camera_.screenToWorld(mousePosition_));
+        const auto simulationTime = std::chrono::steady_clock::now() - simulationStartTime;
+
+        const ps::vulkan::FrameTimings rendererTimings = renderer_.drawFrame(camera_.viewProjection(), particleSystem_.particles());
+        const FrameSample sample{
+            std::chrono::steady_clock::now() - frameWallStartTime,
+            simulationTime,
+            rendererTimings.particleUploadTime,
+            rendererTimings.fenceWaitTime,
+        };
+        if (frameStats_.push(sample)) {
+            const auto& metrics = frameStats_.metrics();
+
+            ps::log::trace(
+                "FPS %.1f | Frame wall %.2f ms | Simulation %.2f ms | Upload %.2f ms | Fence %.2f ms",
+                metrics.fps,
+                metrics.frameWallTimeMs,
+                metrics.simulationTimeMs,
+                metrics.particleUploadTimeMs,
+                metrics.fenceWaitTimeMs
+            );
         }
     }
 }
