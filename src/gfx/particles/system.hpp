@@ -4,6 +4,7 @@
 #include "image/image.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <random>
 #include <span>
 #include <vector>
@@ -26,7 +27,7 @@ class ParticleSystem {
     ImageDimensions imageDimensions() const noexcept;
 
     void randomize();
-    void update(float dt, const glm::vec2& mousePosition);
+    void update(float dt, const std::optional<glm::vec2>& mousePosition);
 
    private:
     std::vector<Particle> particles_;

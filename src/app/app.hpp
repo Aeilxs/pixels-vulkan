@@ -16,6 +16,8 @@
 
 #include <SDL3/SDL.h>
 
+#include <optional>
+
 namespace ps::app {
 
 /// @brief Owns the application lifetime and coordinates input, simulation state and rendering.
@@ -46,7 +48,7 @@ class App {
 
     FrameStats frameStats_;
 
-    glm::vec2 mousePosition_{0.0F, 0.0F};
+    std::optional<glm::vec2> mousePosition_{};
 
     bool running_{true};
 

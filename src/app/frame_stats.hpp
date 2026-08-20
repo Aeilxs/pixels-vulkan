@@ -2,7 +2,6 @@
 
 #include <chrono>
 #include <cstddef>
-#include <optional>
 
 namespace ps::app {
 
@@ -30,11 +29,10 @@ class FrameStats {
     const FrameMetrics& metrics() const noexcept;
 
    private:
-    void updateMetrics(std::chrono::steady_clock::duration windowDuration) noexcept;
+    void updateMetrics() noexcept;
     void resetAccumulation() noexcept;
 
     FrameMetrics metrics_{};
-    std::optional<std::chrono::steady_clock::time_point> windowStartTime_{};
 
     std::chrono::steady_clock::duration totalFrameWallTime_{};
     std::chrono::steady_clock::duration totalSimulationTime_{};

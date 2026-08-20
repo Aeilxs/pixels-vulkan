@@ -68,7 +68,7 @@ void ParticleSystem::randomize() {
     }
 }
 
-void ParticleSystem::update(float dt, const glm::vec2& mousePosition) {
+void ParticleSystem::update(float dt, const std::optional<glm::vec2>& mousePosition) {
     constexpr float stiffness = 30.0F;
     constexpr float damping = 3.0F;
 
@@ -83,15 +83,17 @@ void ParticleSystem::update(float dt, const glm::vec2& mousePosition) {
         const glm::vec2 displacement = p.origin - p.position;
         p.velocity += displacement * stiffness * dt;
 
-        const glm::vec2 delta = p.position - mousePosition;
-        const float distance2 = glm::length2(delta);
+        if (mousePosition.has_value()) {
+            const glm::vec2 delta = p.position - *mousePosition;
+            const float distance2 = glm::length2(delta);
 
-        if (distance2 < radius2 && distance2 > minDistance2) {
-            const float distance = std::sqrt(distance2);
-            const glm::vec2 direction = delta / distance;
-            const float falloff = 1.0F - distance / radius;
+            if (distance2 < radius2 && distance2 > minDistance2) {
+                const float distance = std::sqrt(distance2);
+                const glm::vec2 direction = delta / distance;
+                const float falloff = 1.0F - distance / radius;
 
-            p.velocity += direction * repulsion * falloff * dt;
+                p.velocity += direction * repulsion * falloff * dt;
+            }
         }
 
         p.velocity *= dampingFactor;

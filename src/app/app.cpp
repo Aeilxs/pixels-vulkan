@@ -47,42 +47,54 @@ App::App(const cli::AppOptions& options)
 }
 
 void App::run() {
-    auto previousTime = std::chrono::steady_clock::now();
+    auto previousFrameStartTime = std::chrono::steady_clock::now();
+    // A frame's complete start-to-start wall time is only known when the next frame begins.
+    std::optional<FrameSample> pendingFrameSample{};
 
     while (running_) {
-        const auto frameWallStartTime = std::chrono::steady_clock::now();
+        const auto frameStartTime = std::chrono::steady_clock::now();
+        const auto frameWallTime = frameStartTime - previousFrameStartTime;
+        previousFrameStartTime = frameStartTime;
 
-        const float dt = std::min(std::chrono::duration<float>(frameWallStartTime - previousTime).count(), 0.05F);
-        previousTime = frameWallStartTime;
+        if (pendingFrameSample.has_value()) {
+            pendingFrameSample->frameWallTime = frameWallTime;
+
+            if (frameStats_.push(*pendingFrameSample)) {
+                const auto& metrics = frameStats_.metrics();
+
+                ps::log::trace(
+                    "FPS %.1f | Frame wall %.2f ms | Simulation %.2f ms | Upload %.2f ms | Fence %.2f ms",
+                    metrics.fps,
+                    metrics.frameWallTimeMs,
+                    metrics.simulationTimeMs,
+                    metrics.particleUploadTimeMs,
+                    metrics.fenceWaitTimeMs
+                );
+            }
+        }
+
+        const float dt = std::min(std::chrono::duration<float>(frameWallTime).count(), 0.05F);
 
         pollEvents();
         if (!running_) {
             break;
         }
 
+        std::optional<glm::vec2> mouseWorldPosition{};
+        if (mousePosition_.has_value()) {
+            mouseWorldPosition = camera_.screenToWorld(*mousePosition_);
+        }
+
         const auto simulationStartTime = std::chrono::steady_clock::now();
-        particleSystem_.update(dt, camera_.screenToWorld(mousePosition_));
+        particleSystem_.update(dt, mouseWorldPosition);
         const auto simulationTime = std::chrono::steady_clock::now() - simulationStartTime;
 
         const ps::vulkan::FrameTimings rendererTimings = renderer_.drawFrame(camera_.viewProjection(), particleSystem_.particles());
-        const FrameSample sample{
-            std::chrono::steady_clock::now() - frameWallStartTime,
-            simulationTime,
-            rendererTimings.particleUploadTime,
-            rendererTimings.fenceWaitTime,
+        pendingFrameSample = FrameSample{
+            .simulationTime = simulationTime,
+            .particleUploadTime = rendererTimings.particleUploadTime,
+            .fenceWaitTime = rendererTimings.fenceWaitTime,
         };
-        if (frameStats_.push(sample)) {
-            const auto& metrics = frameStats_.metrics();
-
-            ps::log::trace(
-                "FPS %.1f | Frame wall %.2f ms | Simulation %.2f ms | Upload %.2f ms | Fence %.2f ms",
-                metrics.fps,
-                metrics.frameWallTimeMs,
-                metrics.simulationTimeMs,
-                metrics.particleUploadTimeMs,
-                metrics.fenceWaitTimeMs
-            );
-        }
     }
 }
 

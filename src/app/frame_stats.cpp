@@ -8,28 +8,18 @@ constexpr auto metricsRefreshInterval = std::chrono::milliseconds{500};
 }
 
 bool FrameStats::push(const FrameSample& sample) {
-    const auto now = std::chrono::steady_clock::now();
-
-    if (!windowStartTime_.has_value()) {
-        // push() is called at the end of a frame. Anchor the first statistics
-        // window to the beginning of that first measured frame.
-        windowStartTime_ = now - sample.frameWallTime;
-    }
-
     totalFrameWallTime_ += sample.frameWallTime;
     totalSimulationTime_ += sample.simulationTime;
     totalParticleUploadTime_ += sample.particleUploadTime;
     totalFenceWaitTime_ += sample.fenceWaitTime;
     ++frameCount_;
 
-    const auto windowDuration = now - *windowStartTime_;
-    if (windowDuration < metricsRefreshInterval) {
+    if (totalFrameWallTime_ < metricsRefreshInterval) {
         return false;
     }
 
-    updateMetrics(windowDuration);
+    updateMetrics();
     resetAccumulation();
-    windowStartTime_ = now;
     return true;
 }
 
@@ -37,14 +27,15 @@ const FrameMetrics& FrameStats::metrics() const noexcept {
     return metrics_;
 }
 
-void FrameStats::updateMetrics(std::chrono::steady_clock::duration windowDuration) noexcept {
+void FrameStats::updateMetrics() noexcept {
     if (frameCount_ == 0) {
         return;
     }
 
     const double frameCount = static_cast<double>(frameCount_);
+    const double totalFrameWallTimeSeconds = std::chrono::duration<double>(totalFrameWallTime_).count();
 
-    metrics_.fps = frameCount / std::chrono::duration<double>(windowDuration).count();
+    metrics_.fps = frameCount / totalFrameWallTimeSeconds;
     metrics_.frameWallTimeMs = std::chrono::duration<double, std::milli>(totalFrameWallTime_).count() / frameCount;
     metrics_.simulationTimeMs = std::chrono::duration<double, std::milli>(totalSimulationTime_).count() / frameCount;
     metrics_.particleUploadTimeMs = std::chrono::duration<double, std::milli>(totalParticleUploadTime_).count() / frameCount;
