@@ -140,7 +140,7 @@ target_compile_definitions(
     Pixel_Storm
     PRIVATE
         PIXEL_STORM_SHADER_DIR="${PIXEL_STORM_SHADER_OUTPUT_DIR}"
-        # LOG_USE_COLOR
+        LOG_USE_COLOR
 
         $<$<CONFIG:Debug>:APPLICATION_LOG_LEVEL=LOG_TRACE>
         $<$<CONFIG:Debug>:ENABLE_VULKAN_VALIDATION>
