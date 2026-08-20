@@ -60,6 +60,11 @@ AppOptions parse(int argc, char* argv[]) {
             continue;
         }
 
+        if (arg == "--uncapped") {
+            options.uncapped = true;
+            continue;
+        }
+
         if (arg == "-i" || arg == "--image") {
             options.image_path = next(argc, argv, i, arg);
             continue;
@@ -91,6 +96,7 @@ Options:
   -h, --help          Show this help message and exit
   -i, --image <path>  Specify the path to the image file
   -g, --gap <value>   Specify the gap value (positive integer)
+      --uncapped      Request uncapped presentation for benchmarking
 )" << '\n';
 }
 

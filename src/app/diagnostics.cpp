@@ -28,6 +28,7 @@ void appendApplicationConfiguration(std::ostream& output, const cli::AppOptions&
            << "-------------------------\n"
            << "Image: " << options.image_path.string() << '\n'
            << "Gap: " << options.gap << '\n'
+           << "Uncapped: " << (options.uncapped ? "yes" : "no") << '\n'
            << "Window title: " << config::windowName << '\n'
            << "Initial window size: " << config::initialWindowWidth << 'x' << config::initialWindowHeight << '\n'
            << "Log level: " << ps::log::configuredLevelName() << '\n';
@@ -35,6 +36,7 @@ void appendApplicationConfiguration(std::ostream& output, const cli::AppOptions&
 
 const char* presentModeName(VkPresentModeKHR presentMode) noexcept {
     switch (presentMode) {
+        case VK_PRESENT_MODE_IMMEDIATE_KHR: return "VK_PRESENT_MODE_IMMEDIATE_KHR";
         case VK_PRESENT_MODE_MAILBOX_KHR: return "VK_PRESENT_MODE_MAILBOX_KHR";
         case VK_PRESENT_MODE_FIFO_KHR: return "VK_PRESENT_MODE_FIFO_KHR";
         default: return "unknown";

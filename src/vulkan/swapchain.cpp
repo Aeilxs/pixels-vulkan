@@ -82,15 +82,24 @@ VkSurfaceFormatKHR chooseSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& av
 }
 
 [[nodiscard("The selected Vulkan present mode must be used")]]
-VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes) {
-    // Return VK_PRESENT_MODE_MAILBOX_KHR if available, otherwise return VK_PRESENT_MODE_FIFO_KHR.
-    for (const VkPresentModeKHR& availablePresentMode : availablePresentModes) {
+VkPresentModeKHR choosePresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes, bool uncapped) {
+    if (uncapped) {
+        for (const VkPresentModeKHR availablePresentMode : availablePresentModes) {
+            if (availablePresentMode == VK_PRESENT_MODE_IMMEDIATE_KHR) {
+                return availablePresentMode;
+            }
+        }
+
+        throw std::runtime_error{"Uncapped presentation requested, but VK_PRESENT_MODE_IMMEDIATE_KHR is not supported"};
+    }
+
+    // Prefer mailbox for normal rendering, then fall back to FIFO, which Vulkan guarantees.
+    for (const VkPresentModeKHR availablePresentMode : availablePresentModes) {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR) {
             return availablePresentMode;
         }
     }
 
-    // VK_PRESENT_MODE_FIFO_KHR is guaranteed to be available, so we can return it if MAILBOX unavailable.
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -166,11 +175,17 @@ VkImageView createImageView(VkDevice device, VkImage image, VkFormat format) {
 
 namespace ps::vulkan {
 
-Swapchain::Swapchain(const PhysicalDevice& physicalDevice, const Device& device, const Surface& surface, const platform::Window& window)
+Swapchain::Swapchain(
+    const PhysicalDevice& physicalDevice,
+    const Device& device,
+    const Surface& surface,
+    const platform::Window& window,
+    bool uncapped
+)
     : device_(device.nativeHandle()) {
     const SwapchainSupportDetails swapchainSupport = querySwapchainSupport(physicalDevice.nativeHandle(), surface.nativeHandle());
     const VkSurfaceFormatKHR surfaceFormat = chooseSurfaceFormat(swapchainSupport.formats);
-    const VkPresentModeKHR presentMode = choosePresentMode(swapchainSupport.presentModes);
+    const VkPresentModeKHR presentMode = choosePresentMode(swapchainSupport.presentModes, uncapped);
     const VkExtent2D extent = chooseExtent(swapchainSupport.capabilities, window);
 
     std::uint32_t imageCount = swapchainSupport.capabilities.minImageCount + 1;

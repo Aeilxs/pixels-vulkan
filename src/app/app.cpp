@@ -30,7 +30,7 @@ App::App(const cli::AppOptions& options)
       vulkanSurface_{vulkanInstance_, window_},
       physicalDevice_{vulkanInstance_, vulkanSurface_},
       device_{physicalDevice_},
-      swapchain_{physicalDevice_, device_, vulkanSurface_, window_},
+      swapchain_{physicalDevice_, device_, vulkanSurface_, window_, options.uncapped},
       renderer_{physicalDevice_, device_, swapchain_, particleSystem_.particles()} {
     const glm::vec2 contentSize{
         static_cast<float>(particleSystem_.imageDimensions().width),

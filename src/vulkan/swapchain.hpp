@@ -23,7 +23,13 @@ class Surface;
 /// @note The logical Vulkan device used to create this object must outlive it.
 class Swapchain final {
    public:
-    Swapchain(const PhysicalDevice& physicalDevice, const Device& device, const Surface& surface, const platform::Window& window);
+    Swapchain(
+        const PhysicalDevice& physicalDevice,
+        const Device& device,
+        const Surface& surface,
+        const platform::Window& window,
+        bool uncapped
+    );
 
     ~Swapchain();
 
