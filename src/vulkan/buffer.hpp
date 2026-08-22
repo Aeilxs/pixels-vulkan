@@ -37,7 +37,7 @@ class Buffer {
     VkBuffer nativeHandle() const noexcept;
 
    private:
-    const Device* device_{};
+    VkDevice device_{VK_NULL_HANDLE};
 
     VkBuffer buffer_{VK_NULL_HANDLE};
     VkDeviceMemory memory_{VK_NULL_HANDLE};

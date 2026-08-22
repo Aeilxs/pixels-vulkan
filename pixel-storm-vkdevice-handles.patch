@@ -1,0 +1,184 @@
+diff --git a/src/vulkan/buffer.cpp b/src/vulkan/buffer.cpp
+index 65a7e6c..c3bc673 100644
+--- a/src/vulkan/buffer.cpp
++++ b/src/vulkan/buffer.cpp
+@@ -14,7 +14,7 @@ Buffer::Buffer(
+     VkBufferUsageFlags usage,
+     VkMemoryPropertyFlags requiredMemoryProperties
+ )
+-    : device_{&device}, size_{size}, requiredMemoryProperties_{requiredMemoryProperties} {
++    : device_{device.nativeHandle()}, size_{size}, requiredMemoryProperties_{requiredMemoryProperties} {
+     if (size_ == 0) {
+         throw std::invalid_argument{"Vulkan buffer size must be greater than zero."};
+     }
+@@ -24,14 +24,14 @@ Buffer::Buffer(
+     bufferCreateInfo.usage = usage;
+     bufferCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+ 
+-    VkResult result = vkCreateBuffer(device_->nativeHandle(), &bufferCreateInfo, nullptr, &buffer_);
++    VkResult result = vkCreateBuffer(device_, &bufferCreateInfo, nullptr, &buffer_);
+     if (result != VK_SUCCESS) {
+         throw std::runtime_error{std::string{"Failed to create Vulkan buffer: VkResult "} + std::to_string(result)};
+     }
+ 
+     try {
+         VkMemoryRequirements memoryRequirements{};
+-        vkGetBufferMemoryRequirements(device_->nativeHandle(), buffer_, &memoryRequirements);
++        vkGetBufferMemoryRequirements(device_, buffer_, &memoryRequirements);
+ 
+         const std::uint32_t memoryTypeIndex = physicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, requiredMemoryProperties);
+ 
+@@ -40,12 +40,12 @@ Buffer::Buffer(
+         memoryAllocateInfo.allocationSize = memoryRequirements.size;
+         memoryAllocateInfo.memoryTypeIndex = memoryTypeIndex;
+ 
+-        result = vkAllocateMemory(device_->nativeHandle(), &memoryAllocateInfo, nullptr, &memory_);
++        result = vkAllocateMemory(device_, &memoryAllocateInfo, nullptr, &memory_);
+         if (result != VK_SUCCESS) {
+             throw std::runtime_error{std::string{"Failed to allocate Vulkan memory for buffer: VkResult "} + std::to_string(result)};
+         }
+ 
+-        result = vkBindBufferMemory(device_->nativeHandle(), buffer_, memory_, 0);
++        result = vkBindBufferMemory(device_, buffer_, memory_, 0);
+         if (result != VK_SUCCESS) {
+             throw std::runtime_error{std::string{"Failed to bind Vulkan memory to buffer: VkResult "} + std::to_string(result)};
+         }
+@@ -61,12 +61,12 @@ Buffer::~Buffer() {
+ 
+ void Buffer::destroy() noexcept {
+     if (buffer_ != VK_NULL_HANDLE) {
+-        vkDestroyBuffer(device_->nativeHandle(), buffer_, nullptr);
++        vkDestroyBuffer(device_, buffer_, nullptr);
+         buffer_ = VK_NULL_HANDLE;
+     }
+ 
+     if (memory_ != VK_NULL_HANDLE) {
+-        vkFreeMemory(device_->nativeHandle(), memory_, nullptr);
++        vkFreeMemory(device_, memory_, nullptr);
+         memory_ = VK_NULL_HANDLE;
+     }
+ }
+@@ -93,13 +93,13 @@ void Buffer::write(const void* data, VkDeviceSize size) {
+     }
+ 
+     void* mappedMemory = nullptr;
+-    const VkResult result = vkMapMemory(device_->nativeHandle(), memory_, 0, size, 0, &mappedMemory);
++    const VkResult result = vkMapMemory(device_, memory_, 0, size, 0, &mappedMemory);
+     if (result != VK_SUCCESS) {
+         throw std::runtime_error{std::string{"Failed to map Vulkan buffer memory: VkResult "} + std::to_string(result)};
+     }
+ 
+     std::memcpy(mappedMemory, data, static_cast<std::size_t>(size));
+-    vkUnmapMemory(device_->nativeHandle(), memory_);
++    vkUnmapMemory(device_, memory_);
+ }
+ 
+ Buffer::Buffer(Buffer&& other) noexcept
+@@ -108,7 +108,7 @@ Buffer::Buffer(Buffer&& other) noexcept
+       memory_{other.memory_},
+       size_{other.size_},
+       requiredMemoryProperties_{other.requiredMemoryProperties_} {
+-    other.device_ = nullptr;
++    other.device_ = VK_NULL_HANDLE;
+     other.buffer_ = VK_NULL_HANDLE;
+     other.memory_ = VK_NULL_HANDLE;
+     other.size_ = 0;
+diff --git a/src/vulkan/buffer.hpp b/src/vulkan/buffer.hpp
+index 6f5ae15..a42e046 100644
+--- a/src/vulkan/buffer.hpp
++++ b/src/vulkan/buffer.hpp
+@@ -37,7 +37,7 @@ class Buffer {
+     VkBuffer nativeHandle() const noexcept;
+ 
+    private:
+-    const Device* device_{};
++    VkDevice device_{VK_NULL_HANDLE};
+ 
+     VkBuffer buffer_{VK_NULL_HANDLE};
+     VkDeviceMemory memory_{VK_NULL_HANDLE};
+diff --git a/src/vulkan/image.cpp b/src/vulkan/image.cpp
+index dfc716e..b6276b6 100644
+--- a/src/vulkan/image.cpp
++++ b/src/vulkan/image.cpp
+@@ -16,7 +16,7 @@ Image::Image(
+     VkImageUsageFlags usage,
+     VkMemoryPropertyFlags requiredMemoryProperties
+ )
+-    : device_{&device}, extent_{extent}, format_{format} {
++    : device_{device.nativeHandle()}, extent_{extent}, format_{format} {
+     if (extent_.width == 0 || extent_.height == 0) {
+         throw std::invalid_argument{"Vulkan image extent must be greater than zero."};
+     }
+@@ -34,26 +34,26 @@ Image::Image(
+     imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+     imageCreateInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+ 
+-    VkResult result = vkCreateImage(device_->nativeHandle(), &imageCreateInfo, nullptr, &handle_);
++    VkResult result = vkCreateImage(device_, &imageCreateInfo, nullptr, &handle_);
+     if (result != VK_SUCCESS) {
+         throw std::runtime_error{std::string{"Failed to create Vulkan image: VkResult "} + std::to_string(result)};
+     }
+ 
+     try {
+         VkMemoryRequirements memoryRequirements{};
+-        vkGetImageMemoryRequirements(device_->nativeHandle(), handle_, &memoryRequirements);
++        vkGetImageMemoryRequirements(device_, handle_, &memoryRequirements);
+ 
+         VkMemoryAllocateInfo allocationInfo{};
+         allocationInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+         allocationInfo.allocationSize = memoryRequirements.size;
+         allocationInfo.memoryTypeIndex = physicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, requiredMemoryProperties);
+ 
+-        result = vkAllocateMemory(device_->nativeHandle(), &allocationInfo, nullptr, &memory_);
++        result = vkAllocateMemory(device_, &allocationInfo, nullptr, &memory_);
+         if (result != VK_SUCCESS) {
+             throw std::runtime_error{std::string{"Failed to allocate Vulkan image memory: VkResult "} + std::to_string(result)};
+         }
+ 
+-        result = vkBindImageMemory(device_->nativeHandle(), handle_, memory_, 0);
++        result = vkBindImageMemory(device_, handle_, memory_, 0);
+         if (result != VK_SUCCESS) {
+             throw std::runtime_error{std::string{"Failed to bind Vulkan image memory: VkResult "} + std::to_string(result)};
+         }
+@@ -69,7 +69,7 @@ Image::~Image() {
+ 
+ Image::Image(Image&& other) noexcept
+     : device_{other.device_}, handle_{other.handle_}, memory_{other.memory_}, extent_{other.extent_}, format_{other.format_} {
+-    other.device_ = nullptr;
++    other.device_ = VK_NULL_HANDLE;
+     other.handle_ = VK_NULL_HANDLE;
+     other.memory_ = VK_NULL_HANDLE;
+     other.extent_ = {};
+@@ -77,17 +77,13 @@ Image::Image(Image&& other) noexcept
+ }
+ 
+ void Image::destroy() noexcept {
+-    if (device_ == nullptr) {
+-        return;
+-    }
+-
+     if (handle_ != VK_NULL_HANDLE) {
+-        vkDestroyImage(device_->nativeHandle(), handle_, nullptr);
++        vkDestroyImage(device_, handle_, nullptr);
+         handle_ = VK_NULL_HANDLE;
+     }
+ 
+     if (memory_ != VK_NULL_HANDLE) {
+-        vkFreeMemory(device_->nativeHandle(), memory_, nullptr);
++        vkFreeMemory(device_, memory_, nullptr);
+         memory_ = VK_NULL_HANDLE;
+     }
+ }
+diff --git a/src/vulkan/image.hpp b/src/vulkan/image.hpp
+index 50265e4..c44f37f 100644
+--- a/src/vulkan/image.hpp
++++ b/src/vulkan/image.hpp
+@@ -41,7 +41,7 @@ class Image final {
+    private:
+     void destroy() noexcept;
+ 
+-    const Device* device_{};
++    VkDevice device_{VK_NULL_HANDLE};
+     VkImage handle_{VK_NULL_HANDLE};
+     VkDeviceMemory memory_{VK_NULL_HANDLE};
+     VkExtent2D extent_{};
