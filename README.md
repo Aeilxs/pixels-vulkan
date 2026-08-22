@@ -42,3 +42,11 @@
     "version": 4
 }
 ```
+
+## Benchmarking
+
+```bash
+./build/Pixel_Storm -i assets/benchmarks/<benchmark_image.png> -g 1 --benchmark <output_path.csv> --uncapped
+```
+
+- Simple benchmark done in Release mode.

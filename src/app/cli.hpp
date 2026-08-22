@@ -17,6 +17,7 @@ struct AppOptions {
     std::filesystem::path image_path{};
     std::uint32_t gap{1};
     bool uncapped{false};
+    std::filesystem::path benchmark_output_path{};
 };
 
 void usage(const char* program_name, std::ostream& output_stream);

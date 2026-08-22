@@ -65,6 +65,11 @@ AppOptions parse(int argc, char* argv[]) {
             continue;
         }
 
+        if (arg == "--benchmark") {
+            options.benchmark_output_path = next(argc, argv, i, arg);
+            continue;
+        }
+
         if (arg == "-i" || arg == "--image") {
             options.image_path = next(argc, argv, i, arg);
             continue;
@@ -93,10 +98,11 @@ void usage(const char* arg_0, std::ostream& output_stream) {
 Usage: )" << arg_0 << R"( [options]
 
 Options:
-  -h, --help          Show this help message and exit
-  -i, --image <path>  Specify the path to the image file
-  -g, --gap <value>   Specify the gap value (positive integer)
-      --uncapped      Does not cap the framerate to the display refresh rate (VSync).
+  -h, --help                       Show this help message and exit
+  -i, --image <path>               Specify the path to the image file
+  -g, --gap <value>                Specify the gap value (positive integer)
+      --uncapped                   Does not cap the framerate to the display refresh rate (VSync).
+      --benchmark <output_path>    Record aggregated frame metrics and write them to CSV on exit.
 )" << '\n';
 }
 

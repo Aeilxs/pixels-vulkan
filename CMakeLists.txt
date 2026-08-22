@@ -79,6 +79,7 @@ add_executable(
     src/main.cpp
 
     src/app/app.cpp
+    src/app/benchmark.cpp
     src/app/cli.cpp
     src/app/diagnostics.cpp
     src/app/frame_stats.cpp

@@ -29,6 +29,7 @@ void appendApplicationConfiguration(std::ostream& output, const cli::AppOptions&
            << "Image: " << options.image_path.string() << '\n'
            << "Gap: " << options.gap << '\n'
            << "Uncapped: " << (options.uncapped ? "yes" : "no") << '\n'
+           << "Benchmark output: " << (options.benchmark_output_path.empty() ? "disabled" : options.benchmark_output_path.string()) << '\n'
            << "Window title: " << config::windowName << '\n'
            << "Initial window size: " << config::initialWindowWidth << 'x' << config::initialWindowHeight << '\n'
            << "Log level: " << ps::log::configuredLevelName() << '\n';

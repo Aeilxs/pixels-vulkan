@@ -1,5 +1,6 @@
 #pragma once
 
+#include "app/benchmark.hpp"
 #include "app/cli.hpp"
 #include "app/frame_stats.hpp"
 #include "gfx/camera/camera_2d.hpp"
@@ -16,7 +17,9 @@
 
 #include <SDL3/SDL.h>
 
+#include <filesystem>
 #include <optional>
+#include <vector>
 
 namespace ps::app {
 
@@ -47,6 +50,9 @@ class App {
     ps::vulkan::Renderer renderer_;
 
     FrameStats frameStats_;
+
+    std::filesystem::path benchmarkOutputPath_{};
+    std::vector<BenchmarkSample> benchmarkSamples_{};
 
     std::optional<glm::vec2> mousePosition_{};
 

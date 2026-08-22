@@ -54,7 +54,8 @@ App::App(const cli::AppOptions& options)
           swapchain_,
           particleSystem_.particles(),
           gfx::fonts::FontAtlas::fromTrueType(config::overlayFontPath, config::overlayFontPixelHeight)
-      } {
+      },
+      benchmarkOutputPath_{options.benchmark_output_path} {
     const glm::vec2 contentSize{
         static_cast<float>(particleSystem_.imageDimensions().width),
         static_cast<float>(particleSystem_.imageDimensions().height),
@@ -71,7 +72,8 @@ App::App(const cli::AppOptions& options)
 }
 
 void App::run() {
-    auto previousFrameStartTime = std::chrono::steady_clock::now();
+    const auto benchmarkStartTime = std::chrono::steady_clock::now();
+    auto previousFrameStartTime = benchmarkStartTime;
     // A frame's complete start-to-start wall time is only known when the next frame begins.
     std::optional<FrameSample> pendingFrameSample{};
 
@@ -85,7 +87,26 @@ void App::run() {
 
             if (frameStats_.push(*pendingFrameSample)) {
                 const auto& metrics = frameStats_.metrics();
-                renderer_.setOverlayText(formatOverlay(metrics, particleSystem_.particles().size()));
+                const std::size_t particleCount = particleSystem_.particles().size();
+
+                renderer_.setOverlayText(formatOverlay(metrics, particleCount));
+                ps::log::trace(
+                    "Frame metrics | particles=%zu fps=%.1f frame=%.3fms simulation=%.3fms upload=%.3fms fence=%.3fms",
+                    particleCount,
+                    metrics.fps,
+                    metrics.frameWallTimeMs,
+                    metrics.simulationTimeMs,
+                    metrics.particleUploadTimeMs,
+                    metrics.fenceWaitTimeMs
+                );
+
+                if (!benchmarkOutputPath_.empty()) {
+                    benchmarkSamples_.push_back(BenchmarkSample{
+                        .elapsedTimeSeconds = std::chrono::duration<double>(frameStartTime - benchmarkStartTime).count(),
+                        .particleCount = particleCount,
+                        .metrics = metrics,
+                    });
+                }
             }
         }
 
@@ -111,6 +132,15 @@ void App::run() {
             .particleUploadTime = rendererTimings.particleUploadTime,
             .fenceWaitTime = rendererTimings.fenceWaitTime,
         };
+    }
+
+    if (!benchmarkOutputPath_.empty()) {
+        writeBenchmarkCsv(benchmarkOutputPath_, benchmarkSamples_);
+        ps::log::info(
+            "Benchmark CSV written to %s (%zu samples)",
+            benchmarkOutputPath_.string().c_str(),
+            benchmarkSamples_.size()
+        );
     }
 }
 
