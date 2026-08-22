@@ -1,9 +1,11 @@
 #pragma once
 
-#include "gfx/particles/particle.hpp"
 #include "image/image.hpp"
 
+#include <cstddef>
 #include <cstdint>
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
 #include <optional>
 #include <random>
 #include <span>
@@ -20,8 +22,14 @@ class ParticleSystem {
    public:
     static ParticleSystem fromImage(const ps::image::Image& image, std::uint32_t gap);
 
-    [[nodiscard("ParticleSystem::particles() returns a span of particles. If you don't use it, you might be doing something wrong.")]]
-    std::span<const Particle> particles() const noexcept;
+    [[nodiscard]]
+    std::span<const glm::vec2> positions() const noexcept;
+
+    [[nodiscard]]
+    std::span<const glm::vec4> colors() const noexcept;
+
+    [[nodiscard]]
+    std::size_t size() const noexcept;
 
     [[nodiscard]]
     ImageDimensions imageDimensions() const noexcept;
@@ -30,7 +38,11 @@ class ParticleSystem {
     void update(float dt, const std::optional<glm::vec2>& mousePosition);
 
    private:
-    std::vector<Particle> particles_;
+    std::vector<glm::vec2> positions_;
+    std::vector<glm::vec2> origins_;
+    std::vector<glm::vec2> velocities_;
+    std::vector<glm::vec4> colors_;
+
     ImageDimensions imageDimensions_{};
     std::mt19937 randomEngine_{std::random_device{}()};
 };

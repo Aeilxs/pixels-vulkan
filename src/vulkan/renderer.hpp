@@ -1,7 +1,6 @@
 #pragma once
 
 #include "gfx/fonts/font_atlas.hpp"
-#include "gfx/particles/particle.hpp"
 #include "vulkan/buffer.hpp"
 #include "vulkan/command_buffer.hpp"
 #include "vulkan/command_pool.hpp"
@@ -12,6 +11,8 @@
 #include <chrono>
 #include <cstdint>
 #include <glm/mat4x4.hpp>
+#include <glm/vec2.hpp>
+#include <glm/vec4.hpp>
 #include <span>
 #include <string_view>
 #include <vulkan/vulkan.h>
@@ -39,7 +40,8 @@ class Renderer final {
         const PhysicalDevice& physicalDevice,
         const Device& device,
         const Swapchain& swapchain,
-        std::span<const ps::gfx::particles::Particle> particles,
+        std::span<const glm::vec2> particlePositions,
+        std::span<const glm::vec4> particleColors,
         ps::gfx::fonts::FontAtlas fontAtlas
     );
     ~Renderer();
@@ -55,7 +57,7 @@ class Renderer final {
     // Swapchain recreation is intentionally deferred; OUT_OF_DATE/SUBOPTIMAL
     // are reported as errors until the resize lifecycle is implemented.
     [[nodiscard]]
-    FrameTimings drawFrame(const glm::mat4& viewProjection, std::span<const ps::gfx::particles::Particle> particles);
+    FrameTimings drawFrame(const glm::mat4& viewProjection, std::span<const glm::vec2> particlePositions);
 
    private:
     void recordCommandBuffer(std::uint32_t imageIndex, const glm::mat4& viewProjection);
@@ -71,7 +73,8 @@ class Renderer final {
     CommandBuffer commandBuffer_;
     FrameSynchronization synchronization_;
 
-    Buffer particleBuffer_;
+    Buffer particlePositionBuffer_;
+    Buffer particleColorBuffer_;
     TextOverlay textOverlay_;
     std::uint32_t particleCount_{0};
 };

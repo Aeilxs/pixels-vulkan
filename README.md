@@ -43,6 +43,10 @@
 }
 ```
 
+## Implementation notes
+
+- [Particle data layout and Vulkan vertex streams](src/gfx/particles/README.md)
+
 ## Benchmarking
 
 ```bash

@@ -3,6 +3,7 @@
 #include "vulkan/renderer.hpp"
 #include "vulkan/swapchain.hpp"
 
+#include <array>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
@@ -14,8 +15,8 @@
 namespace ps::vulkan {
 namespace {
 
-Buffer createParticleBuffer(const PhysicalDevice& physicalDevice, const Device& device, std::span<const ps::gfx::particles::Particle> particles) {
-    const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
+Buffer createParticlePositionBuffer(const PhysicalDevice& physicalDevice, const Device& device, std::span<const glm::vec2> positions) {
+    const VkDeviceSize bufferSize = sizeof(glm::vec2) * positions.size();
 
     Buffer buffer{
         physicalDevice,
@@ -25,10 +26,27 @@ Buffer createParticleBuffer(const PhysicalDevice& physicalDevice, const Device& 
         VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
     };
 
-    // This buffer is rewritten every frame. Keep host-visible memory mapped for
-    // its whole lifetime so Buffer::write() only performs the memcpy.
+    // Positions change every frame. Keep this host-visible allocation mapped so
+    // Buffer::write() only copies the dynamic position stream.
     buffer.map();
-    buffer.write(particles.data(), bufferSize);
+    buffer.write(positions.data(), bufferSize);
+
+    return buffer;
+}
+
+Buffer createParticleColorBuffer(const PhysicalDevice& physicalDevice, const Device& device, std::span<const glm::vec4> colors) {
+    const VkDeviceSize bufferSize = sizeof(glm::vec4) * colors.size();
+
+    Buffer buffer{
+        physicalDevice,
+        device,
+        bufferSize,
+        VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT
+    };
+
+    // Colors are immutable during the current simulation, so upload them once.
+    buffer.write(colors.data(), bufferSize);
 
     return buffer;
 }
@@ -39,24 +57,30 @@ GraphicsPipelineConfig makeParticlePipelineConfig() {
     config.fragmentShader = "particle.frag.spv";
     config.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
 
-    VkVertexInputBindingDescription binding{};
-    binding.binding = 0;
-    binding.stride = sizeof(ps::gfx::particles::Particle);
-    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-    config.vertexBindings.push_back(binding);
+    VkVertexInputBindingDescription positionBinding{};
+    positionBinding.binding = 0;
+    positionBinding.stride = sizeof(glm::vec2);
+    positionBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    config.vertexBindings.push_back(positionBinding);
+
+    VkVertexInputBindingDescription colorBinding{};
+    colorBinding.binding = 1;
+    colorBinding.stride = sizeof(glm::vec4);
+    colorBinding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    config.vertexBindings.push_back(colorBinding);
 
     VkVertexInputAttributeDescription positionAttribute{};
     positionAttribute.location = 0;
     positionAttribute.binding = 0;
     positionAttribute.format = VK_FORMAT_R32G32_SFLOAT;
-    positionAttribute.offset = offsetof(ps::gfx::particles::Particle, position);
+    positionAttribute.offset = 0;
     config.vertexAttributes.push_back(positionAttribute);
 
     VkVertexInputAttributeDescription colorAttribute{};
     colorAttribute.location = 1;
-    colorAttribute.binding = 0;
+    colorAttribute.binding = 1;
     colorAttribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
-    colorAttribute.offset = offsetof(ps::gfx::particles::Particle, color);
+    colorAttribute.offset = 0;
     config.vertexAttributes.push_back(colorAttribute);
 
     VkPushConstantRange pushConstantRange{};
@@ -74,7 +98,8 @@ Renderer::Renderer(
     const PhysicalDevice& physicalDevice,
     const Device& device,
     const Swapchain& swapchain,
-    std::span<const ps::gfx::particles::Particle> particles,
+    std::span<const glm::vec2> particlePositions,
+    std::span<const glm::vec4> particleColors,
     ps::gfx::fonts::FontAtlas fontAtlas
 )
     : device_{device.nativeHandle()},
@@ -85,9 +110,13 @@ Renderer::Renderer(
       commandPool_{physicalDevice, device},
       commandBuffer_{device, commandPool_},
       synchronization_{device, swapchain.images().size()},
-      particleBuffer_{createParticleBuffer(physicalDevice, device, particles)},
+      particlePositionBuffer_{createParticlePositionBuffer(physicalDevice, device, particlePositions)},
+      particleColorBuffer_{createParticleColorBuffer(physicalDevice, device, particleColors)},
       textOverlay_{physicalDevice, device, commandPool_, graphicsQueue_, swapchain.imageFormat(), std::move(fontAtlas)},
-      particleCount_{static_cast<std::uint32_t>(particles.size())} {
+      particleCount_{static_cast<std::uint32_t>(particlePositions.size())} {
+    if (particlePositions.size() != particleColors.size()) {
+        throw std::invalid_argument{"Particle position and color streams must have the same element count."};
+    }
 }
 
 Renderer::~Renderer() {
@@ -103,7 +132,7 @@ void Renderer::setOverlayText(std::string_view text) {
     textOverlay_.setText(text);
 }
 
-FrameTimings Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<const ps::gfx::particles::Particle> particles) {
+FrameTimings Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<const glm::vec2> particlePositions) {
     FrameTimings timings{};
     const VkFence inFlightFence = synchronization_.inFlightFence();
 
@@ -114,14 +143,14 @@ FrameTimings Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<cons
     }
     timings.fenceWaitTime = std::chrono::steady_clock::now() - fenceWaitStart;
 
-    if (particles.size() != particleCount_) {
+    if (particlePositions.size() != particleCount_) {
         throw std::logic_error{"Particle count changed after particle buffer creation."};
     }
 
-    const VkDeviceSize bufferSize = sizeof(ps::gfx::particles::Particle) * particles.size();
+    const VkDeviceSize bufferSize = sizeof(glm::vec2) * particlePositions.size();
 
     const auto uploadStart = std::chrono::steady_clock::now();
-    particleBuffer_.write(particles.data(), bufferSize);
+    particlePositionBuffer_.write(particlePositions.data(), bufferSize);
     timings.particleUploadTime = std::chrono::steady_clock::now() - uploadStart;
 
     // The same in-flight fence also protects the overlay's host-visible vertex
@@ -272,10 +301,18 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     renderingInfo.colorAttachmentCount = 1;
     renderingInfo.pColorAttachments = &colorAttachment;
 
-    const VkBuffer particleBufferHandle = particleBuffer_.nativeHandle();
-
-    const VkDeviceSize particleBufferOffset = 0;
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, &particleBufferHandle, &particleBufferOffset);
+    const std::array<VkBuffer, 2> particleBuffers{
+        particlePositionBuffer_.nativeHandle(),
+        particleColorBuffer_.nativeHandle(),
+    };
+    constexpr std::array<VkDeviceSize, 2> particleBufferOffsets{0, 0};
+    vkCmdBindVertexBuffers(
+        commandBuffer,
+        0,
+        static_cast<std::uint32_t>(particleBuffers.size()),
+        particleBuffers.data(),
+        particleBufferOffsets.data()
+    );
 
     vkCmdBeginRendering(commandBuffer, &renderingInfo);
 

@@ -52,7 +52,8 @@ App::App(const cli::AppOptions& options)
           physicalDevice_,
           device_,
           swapchain_,
-          particleSystem_.particles(),
+          particleSystem_.positions(),
+          particleSystem_.colors(),
           gfx::fonts::FontAtlas::fromTrueType(config::overlayFontPath, config::overlayFontPixelHeight)
       },
       benchmarkOutputPath_{options.benchmark_output_path} {
@@ -65,7 +66,7 @@ App::App(const cli::AppOptions& options)
 
     ps::log::trace("Run with image: %s, gap: %d", options.image_path.string().c_str(), options.gap);
     ps::log::trace("Particle system content size: %.1f x %.1f", contentSize.x, contentSize.y);
-    ps::log::trace("Particle system particle count: %zu", particleSystem_.particles().size());
+    ps::log::trace("Particle system particle count: %zu", particleSystem_.size());
 
     camera_.fit(contentSize * 0.5F, contentSize, 0.95F);
     renderer_.setOverlayText("Collecting frame metrics...");
@@ -87,12 +88,11 @@ void App::run() {
 
             if (frameStats_.push(*pendingFrameSample)) {
                 const auto& metrics = frameStats_.metrics();
-                const std::size_t particleCount = particleSystem_.particles().size();
+                const std::size_t particleCount = particleSystem_.size();
 
                 renderer_.setOverlayText(formatOverlay(metrics, particleCount));
                 ps::log::trace(
-                    "Frame metrics | particles=%zu fps=%.1f frame=%.3fms simulation=%.3fms upload=%.3fms fence=%.3fms",
-                    particleCount,
+                    "| fps=%.1f | frame=%.3fms | simulation=%.3fms | upload=%.3fms | fence=%.3fms |",
                     metrics.fps,
                     metrics.frameWallTimeMs,
                     metrics.simulationTimeMs,
@@ -101,11 +101,13 @@ void App::run() {
                 );
 
                 if (!benchmarkOutputPath_.empty()) {
-                    benchmarkSamples_.push_back(BenchmarkSample{
-                        .elapsedTimeSeconds = std::chrono::duration<double>(frameStartTime - benchmarkStartTime).count(),
-                        .particleCount = particleCount,
-                        .metrics = metrics,
-                    });
+                    benchmarkSamples_.push_back(
+                        BenchmarkSample{
+                            .elapsedTimeSeconds = std::chrono::duration<double>(frameStartTime - benchmarkStartTime).count(),
+                            .particleCount = particleCount,
+                            .metrics = metrics,
+                        }
+                    );
                 }
             }
         }
@@ -126,7 +128,7 @@ void App::run() {
         particleSystem_.update(dt, mouseWorldPosition);
         const auto simulationTime = std::chrono::steady_clock::now() - simulationStartTime;
 
-        const ps::vulkan::FrameTimings rendererTimings = renderer_.drawFrame(camera_.viewProjection(), particleSystem_.particles());
+        const ps::vulkan::FrameTimings rendererTimings = renderer_.drawFrame(camera_.viewProjection(), particleSystem_.positions());
         pendingFrameSample = FrameSample{
             .simulationTime = simulationTime,
             .particleUploadTime = rendererTimings.particleUploadTime,
@@ -136,11 +138,7 @@ void App::run() {
 
     if (!benchmarkOutputPath_.empty()) {
         writeBenchmarkCsv(benchmarkOutputPath_, benchmarkSamples_);
-        ps::log::info(
-            "Benchmark CSV written to %s (%zu samples)",
-            benchmarkOutputPath_.string().c_str(),
-            benchmarkSamples_.size()
-        );
+        ps::log::info("Benchmark CSV written to %s (%zu samples)", benchmarkOutputPath_.string().c_str(), benchmarkSamples_.size());
     }
 }
 
