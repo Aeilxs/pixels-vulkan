@@ -244,6 +244,14 @@ std::uint32_t PhysicalDevice::findMemoryType(std::uint32_t filter, VkMemoryPrope
     throw std::runtime_error{"Failed to find suitable Vulkan memory type"};
 }
 
+VkMemoryPropertyFlags PhysicalDevice::memoryTypeProperties(std::uint32_t memoryTypeIndex) const {
+    if (memoryTypeIndex >= memoryProperties_.memoryTypeCount) {
+        throw std::out_of_range{"Vulkan memory type index is out of range"};
+    }
+
+    return memoryProperties_.memoryTypes[memoryTypeIndex].propertyFlags;
+}
+
 const QueueFamilyIndices& PhysicalDevice::queueFamilies() const {
     return queueFamilies_;
 }

@@ -14,10 +14,11 @@ Buffer::Buffer(
     VkBufferUsageFlags usage,
     VkMemoryPropertyFlags requiredMemoryProperties
 )
-    : device_{device.nativeHandle()}, size_{size}, requiredMemoryProperties_{requiredMemoryProperties} {
+    : device_{device.nativeHandle()}, size_{size} {
     if (size_ == 0) {
         throw std::invalid_argument{"Vulkan buffer size must be greater than zero."};
     }
+
     VkBufferCreateInfo bufferCreateInfo{};
     bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
     bufferCreateInfo.size = size_;
@@ -34,6 +35,7 @@ Buffer::Buffer(
         vkGetBufferMemoryRequirements(device_, buffer_, &memoryRequirements);
 
         const std::uint32_t memoryTypeIndex = physicalDevice.findMemoryType(memoryRequirements.memoryTypeBits, requiredMemoryProperties);
+        memoryProperties_ = physicalDevice.memoryTypeProperties(memoryTypeIndex);
 
         VkMemoryAllocateInfo memoryAllocateInfo{};
         memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
@@ -60,6 +62,8 @@ Buffer::~Buffer() {
 }
 
 void Buffer::destroy() noexcept {
+    unmap();
+
     if (buffer_ != VK_NULL_HANDLE) {
         vkDestroyBuffer(device_, buffer_, nullptr);
         buffer_ = VK_NULL_HANDLE;
@@ -69,6 +73,33 @@ void Buffer::destroy() noexcept {
         vkFreeMemory(device_, memory_, nullptr);
         memory_ = VK_NULL_HANDLE;
     }
+}
+
+void* Buffer::map() {
+    if ((memoryProperties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0) {
+        throw std::logic_error{"Vulkan buffer memory is not host-visible; cannot map it."};
+    }
+
+    if (mappedMemory_ != nullptr) {
+        return mappedMemory_;
+    }
+
+    const VkResult result = vkMapMemory(device_, memory_, 0, size_, 0, &mappedMemory_);
+    if (result != VK_SUCCESS) {
+        mappedMemory_ = nullptr;
+        throw std::runtime_error{std::string{"Failed to map Vulkan buffer memory: VkResult "} + std::to_string(result)};
+    }
+
+    return mappedMemory_;
+}
+
+void Buffer::unmap() noexcept {
+    if (mappedMemory_ == nullptr) {
+        return;
+    }
+
+    vkUnmapMemory(device_, memory_);
+    mappedMemory_ = nullptr;
 }
 
 void Buffer::write(const void* data, VkDeviceSize size) {
@@ -84,22 +115,23 @@ void Buffer::write(const void* data, VkDeviceSize size) {
         throw std::invalid_argument{"Vulkan buffer write size exceeds allocated buffer size."};
     }
 
-    if ((requiredMemoryProperties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0) {
+    if ((memoryProperties_ & VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) == 0) {
         throw std::logic_error{"Vulkan buffer memory is not host-visible; cannot write to it."};
     }
 
-    if ((requiredMemoryProperties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0) {
+    // Non-coherent host memory requires explicit vkFlushMappedMemoryRanges calls.
+    // Keep write() honest until that path is implemented.
+    if ((memoryProperties_ & VK_MEMORY_PROPERTY_HOST_COHERENT_BIT) == 0) {
         throw std::logic_error{"Buffer::write currently requires host-coherent memory."};
     }
 
-    void* mappedMemory = nullptr;
-    const VkResult result = vkMapMemory(device_, memory_, 0, size, 0, &mappedMemory);
-    if (result != VK_SUCCESS) {
-        throw std::runtime_error{std::string{"Failed to map Vulkan buffer memory: VkResult "} + std::to_string(result)};
-    }
+    const bool wasMapped = mappedMemory_ != nullptr;
+    void* destination = map();
+    std::memcpy(destination, data, static_cast<std::size_t>(size));
 
-    std::memcpy(mappedMemory, data, static_cast<std::size_t>(size));
-    vkUnmapMemory(device_, memory_);
+    if (!wasMapped) {
+        unmap();
+    }
 }
 
 Buffer::Buffer(Buffer&& other) noexcept
@@ -107,12 +139,14 @@ Buffer::Buffer(Buffer&& other) noexcept
       buffer_{other.buffer_},
       memory_{other.memory_},
       size_{other.size_},
-      requiredMemoryProperties_{other.requiredMemoryProperties_} {
+      memoryProperties_{other.memoryProperties_},
+      mappedMemory_{other.mappedMemory_} {
     other.device_ = VK_NULL_HANDLE;
     other.buffer_ = VK_NULL_HANDLE;
     other.memory_ = VK_NULL_HANDLE;
     other.size_ = 0;
-    other.requiredMemoryProperties_ = 0;
+    other.memoryProperties_ = 0;
+    other.mappedMemory_ = nullptr;
 }
 
 VkBuffer Buffer::nativeHandle() const noexcept {

@@ -36,6 +36,7 @@ REVIEW_DIRS = {
     "src",
     "test",
     "tests",
+    "benchmarks"
 }
 
 SOURCE_SUFFIXES = {
@@ -77,6 +78,7 @@ TEXT_SUFFIXES = SOURCE_SUFFIXES | SHADER_SUFFIXES | {
     ".txt",
     ".yaml",
     ".yml",
+    ".csv"
 }
 
 ROOT_FILES = {

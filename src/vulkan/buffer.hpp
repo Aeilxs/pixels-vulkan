@@ -29,8 +29,12 @@ class Buffer {
     Buffer(Buffer&& other) noexcept;
     Buffer& operator=(Buffer&& other) = delete;
 
-    // Current implementation maps on each write and requires memory requested as
-    // both HOST_VISIBLE and HOST_COHERENT.
+    // Repeated map() calls reuse the existing mapping. Destruction unmaps it.
+    void* map();
+    void unmap() noexcept;
+
+    // Reuses a persistent mapping when present; otherwise maps temporarily.
+    // Non-coherent host memory is intentionally unsupported for now.
     void write(const void* data, VkDeviceSize size);
 
     [[nodiscard]]
@@ -42,7 +46,8 @@ class Buffer {
     VkBuffer buffer_{VK_NULL_HANDLE};
     VkDeviceMemory memory_{VK_NULL_HANDLE};
     VkDeviceSize size_{};
-    VkMemoryPropertyFlags requiredMemoryProperties_{};
+    VkMemoryPropertyFlags memoryProperties_{};
+    void* mappedMemory_{nullptr};
 
     void destroy() noexcept;
 };
