@@ -5,18 +5,12 @@
 
 namespace ps::gfx::particles {
 
-/// @brief CPU-side state of one particle in world coordinates.
+// CPU-side simulation state.
 struct Particle {
-    /// @brief Current particle position in world coordinates.
     glm::vec2 position{};
-
-    /// @brief Initial world-space position used as the return target.
     glm::vec2 origin{};
-
-    /// @brief Current world-space velocity.
     glm::vec2 velocity{};
-
-    /// @brief Normalized RGBA color sampled from the source image.
+    /// @brief Linear RGB with alpha [0.0, 1.0]
     glm::vec4 color{};
 };
 }  // namespace ps::gfx::particles

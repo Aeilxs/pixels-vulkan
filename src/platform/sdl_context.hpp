@@ -9,11 +9,8 @@ namespace ps::platform {
 /// object has an unambiguous responsibility for the SDL lifetime.
 class SdlContext final {
    public:
-    /// @brief Initializes the SDL video subsystem.
-    /// @throws std::runtime_error If SDL initialization fails.
     SdlContext();
 
-    /// @brief Shuts down all initialized SDL subsystems.
     ~SdlContext();
 
     SdlContext(const SdlContext&) = delete;

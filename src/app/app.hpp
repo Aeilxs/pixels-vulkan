@@ -1,18 +1,25 @@
 #pragma once
 
+#include "app/benchmark.hpp"
 #include "app/cli.hpp"
+#include "app/frame_stats.hpp"
 #include "gfx/camera/camera_2d.hpp"
 #include "gfx/particles/system.hpp"
 #include "platform/sdl_context.hpp"
 #include "platform/window.hpp"
-#include "renderer/vulkan/device.hpp"
-#include "renderer/vulkan/instance.hpp"
-#include "renderer/vulkan/physical_device.hpp"
-#include "renderer/vulkan/renderer.hpp"
-#include "renderer/vulkan/surface.hpp"
-#include "renderer/vulkan/swapchain.hpp"
+#include "vulkan/debug_messenger.hpp"
+#include "vulkan/device.hpp"
+#include "vulkan/instance.hpp"
+#include "vulkan/physical_device.hpp"
+#include "vulkan/renderer.hpp"
+#include "vulkan/surface.hpp"
+#include "vulkan/swapchain.hpp"
 
 #include <SDL3/SDL.h>
+
+#include <filesystem>
+#include <optional>
+#include <vector>
 
 namespace ps::app {
 
@@ -22,11 +29,8 @@ namespace ps::app {
 /// resources, the 2D camera, then the Vulkan bootstrap and renderer objects.
 class App {
    public:
-    /// @brief Builds the runtime state from the validated command-line options.
-    /// @param options Startup options used to load the initial particle image.
     App(const cli::AppOptions& options);
 
-    /// @brief Runs the event/render loop until the application is asked to stop.
     void run();
 
    private:
@@ -37,19 +41,25 @@ class App {
 
     ps::gfx::Camera2D camera_;
 
-    ps::renderer::vulkan::Instance vulkanInstance_;
-    ps::renderer::vulkan::Surface vulkanSurface_;
-    ps::renderer::vulkan::PhysicalDevice physicalDevice_;
-    ps::renderer::vulkan::Device device_;
-    ps::renderer::vulkan::Swapchain swapchain_;
-    ps::renderer::vulkan::Renderer renderer_;
+    ps::vulkan::Instance vulkanInstance_;
+    ps::vulkan::DebugMessenger vulkanDebugMessenger_;
+    ps::vulkan::Surface vulkanSurface_;
+    ps::vulkan::PhysicalDevice physicalDevice_;
+    ps::vulkan::Device device_;
+    ps::vulkan::Swapchain swapchain_;
+    ps::vulkan::Renderer renderer_;
 
-    glm::vec2 mousePosition_{0.0F, 0.0F};
+    FrameStats frameStats_;
+
+    std::filesystem::path benchmarkOutputPath_{};
+    std::vector<BenchmarkSample> benchmarkSamples_{};
+
+    std::optional<glm::vec2> mousePosition_{};
 
     bool running_{true};
 
     void pollEvents();
     void handleKeyDown(SDL_Keycode keycode);
-    glm::vec2 mousePosition(const SDL_MouseMotionEvent& motion);
+    void handleMouseMotion(const SDL_MouseMotionEvent& motion);
 };
 }  // namespace ps::app
