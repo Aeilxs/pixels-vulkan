@@ -29,6 +29,9 @@ class PhysicalDevice final {
     [[nodiscard("The selected Vulkan memory type index must be used")]]
     std::uint32_t findMemoryType(std::uint32_t filter, VkMemoryPropertyFlags properties) const;
 
+    [[nodiscard]]
+    VkMemoryPropertyFlags memoryTypeProperties(std::uint32_t memoryTypeIndex) const;
+
    private:
     VkPhysicalDevice handle_{VK_NULL_HANDLE};
     QueueFamilyIndices queueFamilies_;
