@@ -1,11 +1,16 @@
 #include "app/app.hpp"
 #include "app/config.hpp"
 #include "app/diagnostics.hpp"
+#include "gfx/fonts/font_atlas.hpp"
 #include "log/log.hpp"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <chrono>
+#include <cstddef>
+#include <iomanip>
+#include <sstream>
+#include <string>
 
 namespace {
 // Use the actual logical window size; the window manager may adjust the size requested at creation.
@@ -16,6 +21,18 @@ glm::vec2 windowLogicalSize(const ps::platform::Window& window) {
         static_cast<float>(size.width),
         static_cast<float>(size.height),
     };
+}
+
+std::string formatOverlay(const ps::app::FrameMetrics& metrics, std::size_t particleCount) {
+    std::ostringstream stream;
+    stream << std::fixed;
+    stream << "Particles Count " << std::setw(8) << particleCount << '\n';
+    stream << "FPS             " << std::setw(8) << std::setprecision(1) << metrics.fps << '\n';
+    stream << "Frame           " << std::setw(8) << std::setprecision(1) << metrics.frameWallTimeMs << " ms\n";
+    stream << "Simulation      " << std::setw(8) << metrics.simulationTimeMs << " ms\n";
+    stream << "Upload          " << std::setw(8) << metrics.particleUploadTimeMs << " ms\n";
+    stream << "Fence           " << std::setw(8) << metrics.fenceWaitTimeMs << " ms";
+    return stream.str();
 }
 }  // namespace
 
@@ -31,7 +48,13 @@ App::App(const cli::AppOptions& options)
       physicalDevice_{vulkanInstance_, vulkanSurface_},
       device_{physicalDevice_},
       swapchain_{physicalDevice_, device_, vulkanSurface_, window_, options.uncapped},
-      renderer_{physicalDevice_, device_, swapchain_, particleSystem_.particles()} {
+      renderer_{
+          physicalDevice_,
+          device_,
+          swapchain_,
+          particleSystem_.particles(),
+          gfx::fonts::FontAtlas::fromTrueType(config::overlayFontPath, config::overlayFontPixelHeight)
+      } {
     const glm::vec2 contentSize{
         static_cast<float>(particleSystem_.imageDimensions().width),
         static_cast<float>(particleSystem_.imageDimensions().height),
@@ -44,6 +67,7 @@ App::App(const cli::AppOptions& options)
     ps::log::trace("Particle system particle count: %zu", particleSystem_.particles().size());
 
     camera_.fit(contentSize * 0.5F, contentSize, 0.95F);
+    renderer_.setOverlayText("Collecting frame metrics...");
 }
 
 void App::run() {
@@ -61,15 +85,7 @@ void App::run() {
 
             if (frameStats_.push(*pendingFrameSample)) {
                 const auto& metrics = frameStats_.metrics();
-
-                ps::log::trace(
-                    "FPS %.1f | Frame wall %.2f ms | Simulation %.2f ms | Upload %.2f ms | Fence %.2f ms",
-                    metrics.fps,
-                    metrics.frameWallTimeMs,
-                    metrics.simulationTimeMs,
-                    metrics.particleUploadTimeMs,
-                    metrics.fenceWaitTimeMs
-                );
+                renderer_.setOverlayText(formatOverlay(metrics, particleSystem_.particles().size()));
             }
         }
 

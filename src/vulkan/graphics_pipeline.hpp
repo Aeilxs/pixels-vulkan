@@ -1,24 +1,33 @@
 #pragma once
 
+#include <string>
+#include <vector>
 #include <vulkan/vulkan.h>
 
 namespace ps::vulkan {
 
 class Device;
-class Swapchain;
 
-/// @brief Owns the graphics pipeline used by the current renderer.
+struct GraphicsPipelineConfig {
+    std::string vertexShader;
+    std::string fragmentShader;
+    VkPrimitiveTopology topology{VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
+
+    std::vector<VkVertexInputBindingDescription> vertexBindings;
+    std::vector<VkVertexInputAttributeDescription> vertexAttributes;
+    std::vector<VkDescriptorSetLayout> descriptorSetLayouts;
+    std::vector<VkPushConstantRange> pushConstantRanges;
+};
+
+/// @brief Owns one Vulkan graphics pipeline and its pipeline layout.
 ///
-/// The pipeline uses Vulkan 1.3 dynamic rendering and renders Particle records as
-/// point-list primitives. Position and color are read from the particle vertex buffer;
-/// viewport and scissor state remain dynamic so they can follow the swapchain extent.
-/// No descriptor sets are used yet.
-///
-/// @note The logical Vulkan device used to create this pipeline must outlive it.
+/// Only the states that currently differ between Pixel Storm's particle and text
+/// pipelines are configurable. Rasterization, blending, multisampling and dynamic
+/// viewport/scissor state intentionally remain shared until another real use case
+/// requires exposing them.
 class GraphicsPipeline final {
    public:
-    GraphicsPipeline(const Device& device, const Swapchain& swapchain);
-
+    GraphicsPipeline(const Device& device, VkFormat colorAttachmentFormat, const GraphicsPipelineConfig& config);
     ~GraphicsPipeline();
 
     GraphicsPipeline(const GraphicsPipeline&) = delete;

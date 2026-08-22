@@ -96,7 +96,7 @@ Options:
   -h, --help          Show this help message and exit
   -i, --image <path>  Specify the path to the image file
   -g, --gap <value>   Specify the gap value (positive integer)
-      --uncapped      Request uncapped presentation for benchmarking
+      --uncapped      Does not cap the framerate to the display refresh rate (VSync).
 )" << '\n';
 }
 

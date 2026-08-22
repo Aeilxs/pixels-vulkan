@@ -4,10 +4,12 @@
 #include "vulkan/swapchain.hpp"
 
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
 #include <limits>
 #include <stdexcept>
 #include <string>
+#include <utility>
 
 namespace ps::vulkan {
 namespace {
@@ -28,20 +30,60 @@ Buffer createParticleBuffer(const PhysicalDevice& physicalDevice, const Device& 
     return buffer;
 }
 
+GraphicsPipelineConfig makeParticlePipelineConfig() {
+    GraphicsPipelineConfig config{};
+    config.vertexShader = "particle.vert.spv";
+    config.fragmentShader = "particle.frag.spv";
+    config.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+
+    VkVertexInputBindingDescription binding{};
+    binding.binding = 0;
+    binding.stride = sizeof(ps::gfx::particles::Particle);
+    binding.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
+    config.vertexBindings.push_back(binding);
+
+    VkVertexInputAttributeDescription positionAttribute{};
+    positionAttribute.location = 0;
+    positionAttribute.binding = 0;
+    positionAttribute.format = VK_FORMAT_R32G32_SFLOAT;
+    positionAttribute.offset = offsetof(ps::gfx::particles::Particle, position);
+    config.vertexAttributes.push_back(positionAttribute);
+
+    VkVertexInputAttributeDescription colorAttribute{};
+    colorAttribute.location = 1;
+    colorAttribute.binding = 0;
+    colorAttribute.format = VK_FORMAT_R32G32B32A32_SFLOAT;
+    colorAttribute.offset = offsetof(ps::gfx::particles::Particle, color);
+    config.vertexAttributes.push_back(colorAttribute);
+
+    VkPushConstantRange pushConstantRange{};
+    pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+    pushConstantRange.offset = 0;
+    pushConstantRange.size = sizeof(glm::mat4);
+    config.pushConstantRanges.push_back(pushConstantRange);
+
+    return config;
+}
+
 }  // namespace
 
 Renderer::Renderer(
-    const PhysicalDevice& physicalDevice, const Device& device, const Swapchain& swapchain, std::span<const ps::gfx::particles::Particle> particles
+    const PhysicalDevice& physicalDevice,
+    const Device& device,
+    const Swapchain& swapchain,
+    std::span<const ps::gfx::particles::Particle> particles,
+    ps::gfx::fonts::FontAtlas fontAtlas
 )
     : device_{device.nativeHandle()},
       graphicsQueue_{device.graphicsQueue()},
       presentQueue_{device.presentQueue()},
       swapchain_{swapchain},
-      graphicsPipeline_{device, swapchain},
+      particlePipeline_{device, swapchain.imageFormat(), makeParticlePipelineConfig()},
       commandPool_{physicalDevice, device},
       commandBuffer_{device, commandPool_},
       synchronization_{device, swapchain.images().size()},
       particleBuffer_{createParticleBuffer(physicalDevice, device, particles)},
+      textOverlay_{physicalDevice, device, commandPool_, graphicsQueue_, swapchain.imageFormat(), std::move(fontAtlas)},
       particleCount_{static_cast<std::uint32_t>(particles.size())} {
 }
 
@@ -52,6 +94,10 @@ Renderer::~Renderer() {
         // objects that are about to be destroyed.
         vkDeviceWaitIdle(device_);
     }
+}
+
+void Renderer::setOverlayText(std::string_view text) {
+    textOverlay_.setText(text);
 }
 
 FrameTimings Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<const ps::gfx::particles::Particle> particles) {
@@ -74,6 +120,10 @@ FrameTimings Renderer::drawFrame(glm::mat4 const& viewProjection, std::span<cons
     const auto uploadStart = std::chrono::steady_clock::now();
     particleBuffer_.write(particles.data(), bufferSize);
     timings.particleUploadTime = std::chrono::steady_clock::now() - uploadStart;
+
+    // The same in-flight fence also protects the overlay's host-visible vertex
+    // buffer, so dirty text is uploaded only after the previous frame completed.
+    textOverlay_.uploadIfDirty();
 
     std::uint32_t imageIndex = 0;
     result = vkAcquireNextImageKHR(
@@ -240,10 +290,12 @@ void Renderer::recordCommandBuffer(std::uint32_t imageIndex, glm::mat4 const& vi
     scissor.extent = extent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
 
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, graphicsPipeline_.nativeHandle());
-    vkCmdPushConstants(commandBuffer, graphicsPipeline_.layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjection);
+    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, particlePipeline_.nativeHandle());
+    vkCmdPushConstants(commandBuffer, particlePipeline_.layout(), VK_SHADER_STAGE_VERTEX_BIT, 0, sizeof(glm::mat4), &viewProjection);
 
     vkCmdDraw(commandBuffer, particleCount_, 1, 0, 0);
+
+    textOverlay_.record(commandBuffer, extent);
 
     vkCmdEndRendering(commandBuffer);
 

@@ -1,13 +1,10 @@
-#include "gfx/particles/particle.hpp"
-#include "vulkan/device.hpp"
 #include "vulkan/graphics_pipeline.hpp"
-#include "vulkan/swapchain.hpp"
 
-#include <cstddef>
+#include "vulkan/device.hpp"
+
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
-#include <glm/mat4x4.hpp>
 #include <stdexcept>
 #include <string>
 #include <vector>
@@ -15,8 +12,6 @@
 #ifndef PIXEL_STORM_SHADER_DIR
 #error "PIXEL_STORM_SHADER_DIR must be defined by CMake"
 #endif
-
-using ps::gfx::particles::Particle;
 
 namespace ps::vulkan {
 namespace {
@@ -61,10 +56,11 @@ VkShaderModule createShaderModule(VkDevice device, const std::vector<std::uint32
 
 }  // namespace
 
-GraphicsPipeline::GraphicsPipeline(const Device& device, const Swapchain& swapchain) : device_{device.nativeHandle()} {
+GraphicsPipeline::GraphicsPipeline(const Device& device, VkFormat colorAttachmentFormat, const GraphicsPipelineConfig& config)
+    : device_{device.nativeHandle()} {
     const std::filesystem::path shaderDirectory{PIXEL_STORM_SHADER_DIR};
-    const std::vector<std::uint32_t> vertexCode = readSpirv(shaderDirectory / "particle.vert.spv");
-    const std::vector<std::uint32_t> fragmentCode = readSpirv(shaderDirectory / "particle.frag.spv");
+    const std::vector<std::uint32_t> vertexCode = readSpirv(shaderDirectory / config.vertexShader);
+    const std::vector<std::uint32_t> fragmentCode = readSpirv(shaderDirectory / config.fragmentShader);
 
     VkShaderModule vertexShader = VK_NULL_HANDLE;
     VkShaderModule fragmentShader = VK_NULL_HANDLE;
@@ -90,32 +86,16 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, const Swapchain& swapch
             fragmentStage,
         };
 
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Particle);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        VkVertexInputAttributeDescription attributeDescriptions[2]{};
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Particle, position);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32A32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Particle, color);
-
         VkPipelineVertexInputStateCreateInfo vertexInput{};
         vertexInput.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        vertexInput.vertexBindingDescriptionCount = 1;
-        vertexInput.pVertexBindingDescriptions = &bindingDescription;
-        vertexInput.vertexAttributeDescriptionCount = 2;
-        vertexInput.pVertexAttributeDescriptions = attributeDescriptions;
+        vertexInput.vertexBindingDescriptionCount = static_cast<std::uint32_t>(config.vertexBindings.size());
+        vertexInput.pVertexBindingDescriptions = config.vertexBindings.empty() ? nullptr : config.vertexBindings.data();
+        vertexInput.vertexAttributeDescriptionCount = static_cast<std::uint32_t>(config.vertexAttributes.size());
+        vertexInput.pVertexAttributeDescriptions = config.vertexAttributes.empty() ? nullptr : config.vertexAttributes.data();
 
         VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
         inputAssembly.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_POINT_LIST;
+        inputAssembly.topology = config.topology;
         inputAssembly.primitiveRestartEnable = VK_FALSE;
 
         VkPipelineViewportStateCreateInfo viewportState{};
@@ -142,12 +122,10 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, const Swapchain& swapch
         colorBlendAttachment.blendEnable = VK_TRUE;
         colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
         colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-
         colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
         colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
         colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
         colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
-
         colorBlendAttachment.colorWriteMask =
             VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
 
@@ -167,27 +145,22 @@ GraphicsPipeline::GraphicsPipeline(const Device& device, const Swapchain& swapch
         dynamicState.dynamicStateCount = 2;
         dynamicState.pDynamicStates = dynamicStates;
 
-        VkPushConstantRange pushConstantRange{};
-        pushConstantRange.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        pushConstantRange.offset = 0;
-        pushConstantRange.size = sizeof(glm::mat4);
-
         VkPipelineLayoutCreateInfo layoutCreateInfo{};
         layoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-        layoutCreateInfo.pushConstantRangeCount = 1;
-        layoutCreateInfo.pPushConstantRanges = &pushConstantRange;
+        layoutCreateInfo.setLayoutCount = static_cast<std::uint32_t>(config.descriptorSetLayouts.size());
+        layoutCreateInfo.pSetLayouts = config.descriptorSetLayouts.empty() ? nullptr : config.descriptorSetLayouts.data();
+        layoutCreateInfo.pushConstantRangeCount = static_cast<std::uint32_t>(config.pushConstantRanges.size());
+        layoutCreateInfo.pPushConstantRanges = config.pushConstantRanges.empty() ? nullptr : config.pushConstantRanges.data();
 
         VkResult result = vkCreatePipelineLayout(device_, &layoutCreateInfo, nullptr, &layout_);
         if (result != VK_SUCCESS) {
             throw std::runtime_error{std::string{"Failed to create Vulkan pipeline layout: VkResult "} + std::to_string(result)};
         }
 
-        const VkFormat colorFormat = swapchain.imageFormat();
-
         VkPipelineRenderingCreateInfo renderingInfo{};
         renderingInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO;
         renderingInfo.colorAttachmentCount = 1;
-        renderingInfo.pColorAttachmentFormats = &colorFormat;
+        renderingInfo.pColorAttachmentFormats = &colorAttachmentFormat;
 
         VkGraphicsPipelineCreateInfo pipelineCreateInfo{};
         pipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;

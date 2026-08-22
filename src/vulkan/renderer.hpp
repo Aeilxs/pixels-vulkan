@@ -1,16 +1,19 @@
 #pragma once
 
+#include "gfx/fonts/font_atlas.hpp"
 #include "gfx/particles/particle.hpp"
 #include "vulkan/buffer.hpp"
 #include "vulkan/command_buffer.hpp"
 #include "vulkan/command_pool.hpp"
 #include "vulkan/frame_synchronization.hpp"
 #include "vulkan/graphics_pipeline.hpp"
+#include "vulkan/text_overlay.hpp"
 
 #include <chrono>
 #include <cstdint>
 #include <glm/mat4x4.hpp>
 #include <span>
+#include <string_view>
 #include <vulkan/vulkan.h>
 
 namespace ps::vulkan {
@@ -26,25 +29,18 @@ struct FrameTimings {
 
 /// @brief Coordinates Vulkan resources and commands required to render one frame.
 ///
-/// The renderer owns the resources that belong to frame rendering itself: the
-/// graphics pipeline, graphics command pool, primary command buffer and frame
-/// synchronization primitives. The current implementation also uploads and owns
-/// the particle vertex buffer supplied at construction. It records rendering commands,
-/// submits them to the graphics queue and presents the acquired swapchain image.
-///
-/// Bootstrap resources such as the Vulkan instance, surface, physical device,
-/// logical device and swapchain remain separate objects. This keeps bootstrap
-/// ownership explicit while centralizing per-frame Vulkan orchestration here.
-///
-/// @note The logical device and swapchain supplied at construction must outlive
-/// this object.
+/// Renderer keeps frame orchestration explicit: wait, host uploads, image acquire,
+/// command recording, submission and presentation. Particle rendering and the
+/// diagnostics text overlay use separate graphics pipelines inside one dynamic-
+/// rendering pass.
 class Renderer final {
    public:
     Renderer(
         const PhysicalDevice& physicalDevice,
         const Device& device,
         const Swapchain& swapchain,
-        std::span<const ps::gfx::particles::Particle> particles
+        std::span<const ps::gfx::particles::Particle> particles,
+        ps::gfx::fonts::FontAtlas fontAtlas
     );
     ~Renderer();
 
@@ -53,6 +49,8 @@ class Renderer final {
 
     Renderer(Renderer&&) = delete;
     Renderer& operator=(Renderer&&) = delete;
+
+    void setOverlayText(std::string_view text);
 
     // Swapchain recreation is intentionally deferred; OUT_OF_DATE/SUBOPTIMAL
     // are reported as errors until the resize lifecycle is implemented.
@@ -68,12 +66,13 @@ class Renderer final {
 
     const Swapchain& swapchain_;
 
-    GraphicsPipeline graphicsPipeline_;
+    GraphicsPipeline particlePipeline_;
     CommandPool commandPool_;
     CommandBuffer commandBuffer_;
     FrameSynchronization synchronization_;
 
     Buffer particleBuffer_;
+    TextOverlay textOverlay_;
     std::uint32_t particleCount_{0};
 };
 

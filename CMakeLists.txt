@@ -12,7 +12,7 @@ project(
 # - Vulkan SDK: https://vulkan.lunarg.com/sdk/home
 # - SDL3: https://www.libsdl.org/
 # - GLM: https://github.com/g-truc/glm
-# - STBI: https://github.com/nothings/stb (stb_image.h)
+# - stb: https://github.com/nothings/stb (stb_image.h, stb_truetype.h)
 # - Log: Rxi's log library: https://github.com/rxi/log.c
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -48,17 +48,26 @@ endfunction()
 
 set(PARTICLE_VERTEX_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/particle.vert")
 set(PARTICLE_FRAGMENT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/particle.frag")
+set(TEXT_VERTEX_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/text.vert")
+set(TEXT_FRAGMENT_SHADER "${CMAKE_CURRENT_SOURCE_DIR}/shaders/text.frag")
+
 set(PARTICLE_VERTEX_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/particle.vert.spv")
 set(PARTICLE_FRAGMENT_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/particle.frag.spv")
+set(TEXT_VERTEX_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/text.vert.spv")
+set(TEXT_FRAGMENT_SPIRV "${PIXEL_STORM_SHADER_OUTPUT_DIR}/text.frag.spv")
 
 pixel_storm_compile_shader("${PARTICLE_VERTEX_SHADER}" "${PARTICLE_VERTEX_SPIRV}")
 pixel_storm_compile_shader("${PARTICLE_FRAGMENT_SHADER}" "${PARTICLE_FRAGMENT_SPIRV}")
+pixel_storm_compile_shader("${TEXT_VERTEX_SHADER}" "${TEXT_VERTEX_SPIRV}")
+pixel_storm_compile_shader("${TEXT_FRAGMENT_SHADER}" "${TEXT_FRAGMENT_SPIRV}")
 
 add_custom_target(
     Pixel_StormShaders
     DEPENDS
         "${PARTICLE_VERTEX_SPIRV}"
         "${PARTICLE_FRAGMENT_SPIRV}"
+        "${TEXT_VERTEX_SPIRV}"
+        "${TEXT_FRAGMENT_SPIRV}"
 )
 
 #
@@ -75,6 +84,8 @@ add_executable(
     src/app/frame_stats.cpp
 
     src/gfx/camera/camera_2d.cpp
+    src/gfx/fonts/font_atlas.cpp
+    src/gfx/fonts/text_geometry.cpp
     src/gfx/particles/system.cpp
 
     src/image/image.cpp
@@ -89,11 +100,13 @@ add_executable(
     src/vulkan/device.cpp
     src/vulkan/frame_synchronization.cpp
     src/vulkan/graphics_pipeline.cpp
+    src/vulkan/image.cpp
     src/vulkan/instance.cpp
     src/vulkan/physical_device.cpp
     src/vulkan/renderer.cpp
     src/vulkan/surface.cpp
     src/vulkan/swapchain.cpp
+    src/vulkan/text_overlay.cpp
 
     vendor/log/log.c
 )
@@ -140,6 +153,7 @@ target_compile_definitions(
     Pixel_Storm
     PRIVATE
         PIXEL_STORM_SHADER_DIR="${PIXEL_STORM_SHADER_OUTPUT_DIR}"
+        PIXEL_STORM_ASSET_DIR="${CMAKE_CURRENT_SOURCE_DIR}/assets"
         LOG_USE_COLOR
 
         $<$<CONFIG:Debug>:APPLICATION_LOG_LEVEL=LOG_TRACE>
