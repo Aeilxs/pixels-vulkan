@@ -2,6 +2,7 @@
 #include "app/config.hpp"
 #include "app/diagnostics.hpp"
 #include "gfx/fonts/font_atlas.hpp"
+#include "gfx/particles/effect.hpp"
 #include "log/log.hpp"
 
 #include <SDL3/SDL.h>
@@ -13,6 +14,10 @@
 #include <string>
 
 namespace {
+using ps::gfx::particles::Effect;
+
+constexpr Effect activeParticleEffects = Effect::Repulsion;
+
 // Use the actual logical window size; the window manager may adjust the size requested at creation.
 glm::vec2 windowLogicalSize(const ps::platform::Window& window) {
     const ps::platform::Window::LogicalSize size = window.logicalSize();
@@ -125,7 +130,7 @@ void App::run() {
         }
 
         const auto simulationStartTime = std::chrono::steady_clock::now();
-        particleSystem_.update(dt, mouseWorldPosition);
+        particleSystem_.update(dt, mouseWorldPosition, activeParticleEffects);
         const auto simulationTime = std::chrono::steady_clock::now() - simulationStartTime;
 
         const ps::vulkan::FrameTimings rendererTimings = renderer_.drawFrame(camera_.viewProjection(), particleSystem_.positions());

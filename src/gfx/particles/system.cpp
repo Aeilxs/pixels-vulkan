@@ -72,41 +72,111 @@ void ParticleSystem::randomize() {
     }
 }
 
-void ParticleSystem::update(float dt, const std::optional<glm::vec2>& mousePosition) {
-    constexpr float stiffness = 30.0F;
+void ParticleSystem::update(float dt, const std::optional<glm::vec2>& mousePosition, Effect effects) {
     constexpr float damping = 3.0F;
+    constexpr float gravityAcceleration = 1200.0F;
 
-    constexpr float radius = 800.0F;
-    constexpr float repulsion = 8000.0F;
-    constexpr float minDistance2 = 0.0001F;
-
-    const float radius2 = radius * radius;
     const float dampingFactor = std::exp(-damping * dt);
+    const bool springEnabled = hasEffect(effects, Effect::Spring);
+    const bool repulsionEnabled = hasEffect(effects, Effect::Repulsion);
+    const bool attractionEnabled = hasEffect(effects, Effect::Attraction);
+    const bool vortexEnabled = hasEffect(effects, Effect::Vortex);
+    const bool gravityEnabled = hasEffect(effects, Effect::Gravity);
 
     for (std::size_t i = 0; i < positions_.size(); ++i) {
         glm::vec2& position = positions_[i];
         glm::vec2& velocity = velocities_[i];
         const glm::vec2& origin = origins_[i];
 
-        const glm::vec2 displacement = origin - position;
-        velocity += displacement * stiffness * dt;
+        glm::vec2 acceleration{0.0F};
+
+        if (springEnabled) {
+            acceleration += springAcceleration(position, origin);
+        }
 
         if (mousePosition.has_value()) {
-            const glm::vec2 delta = position - *mousePosition;
-            const float distance2 = glm::length2(delta);
-
-            if (distance2 < radius2 && distance2 > minDistance2) {
-                const float distance = std::sqrt(distance2);
-                const glm::vec2 direction = delta / distance;
-                const float falloff = 1.0F - distance / radius;
-
-                velocity += direction * repulsion * falloff * dt;
+            if (repulsionEnabled) {
+                acceleration += repulsionAcceleration(position, *mousePosition);
+            }
+            if (attractionEnabled) {
+                acceleration += attractionAcceleration(position, *mousePosition);
+            }
+            if (vortexEnabled) {
+                acceleration += vortexAcceleration(position, *mousePosition);
             }
         }
 
+        if (gravityEnabled) {
+            acceleration.y += gravityAcceleration;
+        }
+
+        velocity += acceleration * dt;
         velocity *= dampingFactor;
         position += velocity * dt;
     }
+}
+
+glm::vec2 ParticleSystem::springAcceleration(const glm::vec2& position, const glm::vec2& origin) noexcept {
+    constexpr float stiffness = 30.0F;
+    return (origin - position) * stiffness;
+}
+
+glm::vec2 ParticleSystem::repulsionAcceleration(const glm::vec2& position, const glm::vec2& mousePosition) noexcept {
+    constexpr float radius = 800.0F;
+    constexpr float strength = 8000.0F;
+    constexpr float minDistance2 = 0.0001F;
+
+    const glm::vec2 delta = position - mousePosition;
+    const float distance2 = glm::length2(delta);
+    const float radius2 = radius * radius;
+
+    if (distance2 >= radius2 || distance2 <= minDistance2) {
+        return {};
+    }
+
+    const float distance = std::sqrt(distance2);
+    const glm::vec2 direction = delta / distance;
+    const float falloff = 1.0F - distance / radius;
+    return direction * strength * falloff;
+}
+
+glm::vec2 ParticleSystem::attractionAcceleration(const glm::vec2& position, const glm::vec2& mousePosition) noexcept {
+    constexpr float radius = 1200.0F;
+    constexpr float strength = 5000.0F;
+    constexpr float minDistance2 = 0.0001F;
+
+    const glm::vec2 delta = mousePosition - position;
+    const float distance2 = glm::length2(delta);
+    const float radius2 = radius * radius;
+
+    if (distance2 >= radius2 || distance2 <= minDistance2) {
+        return {};
+    }
+
+    const float distance = std::sqrt(distance2);
+    const glm::vec2 direction = delta / distance;
+    const float falloff = 1.0F - distance / radius;
+    return direction * strength * falloff;
+}
+
+glm::vec2 ParticleSystem::vortexAcceleration(const glm::vec2& position, const glm::vec2& mousePosition) noexcept {
+    constexpr float radius = 1400.0F;
+    constexpr float strength = 7000.0F;
+    constexpr float minDistance2 = 0.0001F;
+
+    const glm::vec2 delta = position - mousePosition;
+    const float distance2 = glm::length2(delta);
+    const float radius2 = radius * radius;
+
+    if (distance2 >= radius2 || distance2 <= minDistance2) {
+        return {};
+    }
+
+    const float distance = std::sqrt(distance2);
+    const glm::vec2 radialDirection = delta / distance;
+    const glm::vec2 tangent{-radialDirection.y, radialDirection.x};
+    const float falloff = 1.0F - distance / radius;
+    return tangent * strength * falloff;
 }
 
 std::span<const glm::vec2> ParticleSystem::positions() const noexcept {
